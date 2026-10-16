@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle del cantante</title>
+</head>
+<body>
+  <h1>Detalle del cantante</h1>
+  <div th:if="${mensaje}!=null">
+      <h3 style="color:FF0000" th:text="${mensaje}"></h3>
+  </div>
+
+  <div th:if="${mensaje}==null">
+      <h5>ID:</h5>
+      <h6 th:text="${singer.id}"></h6>
+      <h5>Nombre:</h5>
+      <h6 th:text="${singer.firstName}"></h6>
+      <h5>Apellido:</h5>
+      <h6 th:text="${singer.lastName}"></h6>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+                                                                                                 Proyectos TIC 2026
+
+                                          Proyecto
+
+Contexto
+
+Para efectos del proyecto, se plantea que UM (Uruguay Mnatural) es una organización
+vinculada al Ministerio de Turismo del Uruguay que busca fortalecer la difusión y el acceso a
+la oferta turística del país mediante una plataforma digital integrada.
+En la actualidad, numerosas empresas, emprendimientos y prestadores particulares ofrecen
+experiencias turísticas en diferentes departamentos del país. Sin embargo, esta oferta se
+encuentra distribuida entre sitios web, redes sociales y canales de contacto propios, lo que
+dificulta que un turista pueda conocer y comparar, desde un único lugar, las actividades
+disponibles.
+Uruguay Mnatural solicita seleccionar una empresa del rubro de la industria de software
+para el diseño y construcción de una solución que permita concentrar esta oferta en una
+única plataforma. La empresa desarrolladora de la solución estará representada, en el
+contexto del curso, por cada equipo de estudiantes.
+
+Descripción general de la solución solicitada
+
+La plataforma deberá servir como punto de encuentro entre los turistas y los prestadores de
+actividades turísticas. Se pretende que cualquier visitante pueda recorrer la oferta disponible
+en todo el territorio nacional y obtener información suficiente para decidir qué actividades
+realizar durante su estadía.
+Las actividades podrán pertenecer (o ser “etiquetadas”) a diferentes categorías, como
+turismo de naturaleza, trekking, aventura, gastronomía, actividades acuáticas, recorridos
+históricos, enoturismo, cabalgatas, senderismo u otras que la organización considere
+pertinentes.
+La información publicada deberá permitir identificar con claridad el emprendimiento
+responsable, la ubicación, una descripción de la experiencia, duración aproximada, precio,
+características de la actividad y cualquier información relevante para el turista, como
+requisitos de edad, equipamiento necesario o equipamiento proporcionado por el prestador.
+
+Portal para turistas
+
+La plataforma contará con un portal orientado al público general. Un visitante podrá
+consultar las actividades publicadas y explorar la oferta turística sin necesidad de
+registrarse. Se espera que pueda localizar propuestas mediante diferentes criterios, por
+ejemplo destino, tipo de actividad, fecha, precio u otras características que resulten útiles.
+Cuando una persona ingrese al detalle de una actividad deberá poder consultar su
+información general y conocer las próximas oportunidades disponibles para realizarla.
+Algunas actividades podrán ofrecerse varias veces en una misma semana o mes, por lo que
+el sistema deberá contemplar la existencia de fechas y horarios concretos asociados a una
+actividad.
+
+                                                                                                                          1
+                                                                                                 Proyectos TIC 2026
+
+Para reservar una actividad será necesario que el turista disponga de una cuenta en la
+plataforma. Una vez autenticado podrá seleccionar una fecha y horario, indicar la cantidad
+de participantes y avanzar con la reserva. Las actividades podrán tener una cantidad
+limitada de lugares, por lo que la disponibilidad deberá ser considerada durante el proceso.
+Considerar que la plataforma deberá permitir al emprendimiento establecer la cantidad de
+minutos previo al registro de la reserva, es decir, hasta cuanto tiempo está permitido realizar
+la reserva antes del comienzo de la actividad. De indicarse cero minutos, el límite es la hora
+de inicio de la actividad.
+
+La plataforma también ofrecerá la posibilidad de efectuar el pago de la actividad como parte
+del proceso de reserva. El procesamiento del pago no será realizado directamente por
+Uruguay Mnatural, sino mediante la integración con un servicio externo de pagos que
+exponga una API para este propósito.
+
+El turista registrado deberá poder consultar posteriormente sus reservas y el estado de cada
+una. Una vez que haya participado de una actividad, podrá compartir su experiencia
+mediante un comentario y una valoración de uno a cinco puntos. Estas valoraciones
+formarán parte de la información pública de la actividad y ayudarán a otros turistas a evaluar
+las distintas propuestas.
+
+Espacio para prestadores turísticos
+
+La plataforma deberá permitir la participación de prestadores turísticos de diferente
+naturaleza. Podrán incorporarse tanto empresas como personas particulares que
+desarrollen una actividad turística y deseen ofrecerla a través de Uruguay Mnatural.
+
+Cada prestador tendrá un espacio propio dentro del sistema desde el cual podrá registrar la
+información de su emprendimiento, incluyendo datos de identificación, contacto, ubicación y
+una descripción general de los servicios ofrecidos.
+
+Una vez registrado el emprendimiento, el prestador podrá incorporar las actividades que
+ofrece. Para cada actividad deberá proporcionar la información necesaria para su
+publicación en el portal, incluyendo su costo y las condiciones bajo las cuales puede
+realizarse.
+
+Una misma actividad podrá ofrecerse en diferentes fechas y horarios. El prestador será
+responsable de organizar estas disponibilidades y de establecer, cuando corresponda, la
+cantidad de personas que puede participar en cada instancia.
+
+Desde su espacio de gestión, el prestador deberá poder consultar las reservas
+correspondientes a sus actividades y disponer de la información necesaria para organizar la
+prestación del servicio.
+
+Administración de la plataforma
+
+Uruguay Mnatural contará con usuarios administradores responsables de mantener ciertos
+datos generales utilizados por toda la plataforma. El objetivo de esta área no es gestionar
+las actividades en nombre de los prestadores, sino administrar información común que
+permita mantener criterios homogéneos en el sistema.
+
+                                                                                                                          2
+                                                                                                 Proyectos TIC 2026
+
+Entre estos datos podrán encontrarse los tipos de actividad turística y los tipos de
+equipamiento asociados a las experiencias. A modo de ejemplo, podrían existir tipos de
+actividad como senderismo, cabalgata, turismo gastronómico o actividad acuática, así como
+tipos de equipamiento como casco, chaleco salvavidas, bicicleta o equipo de buceo, calzado
+deportivo, agua.
+Los administradores podrán mantener este tipo de información mediante las operaciones
+habituales de alta, consulta, modificación y eliminación, además de aquellas otras entidades
+de configuración que se definan durante el análisis del sistema.
+
+Integración con sistemas externos
+
+La solución deberá contemplar al menos una integración con un sistema externo mediante
+una API. En particular, el proceso de pago de las reservas se realizará utilizando un servicio
+de pagos provisto por un tercero.
+La integración deberá considerar que un servicio externo puede devolver diferentes
+resultados o incluso no encontrarse disponible temporalmente. La plataforma deberá
+manejar estas situaciones de manera coherente, evitando confirmar una operación cuando
+el pago no haya sido procesado satisfactoriamente. (Se evaluarán las formas de
+implementación).
+También sería conveniente integrar el sistema con alguna API pública de clima para mostrar
+el pronóstico previsto para la fecha y lugar de la actividad.
+Por otra parte, se solicita que el propio sistema exponga una API para integrarse con otras
+plataformas. En ese sentido, se solicitan las siguientes operaciones: listado de todos los
+emprendimientos, listados de todas las actividades en un día para cierto Departamento /
+Localidad, top 3 actividades mejor puntuadas en el mes por departamento, verificar
+emprendimiento, buscar actividad por palabra clave.
+
+Desafío para el equipo de desarrollo
+
+Uruguay Mnatural ha expresado las necesidades generales del proyecto, pero no ha
+definido en detalle todos los procesos, reglas de negocio, estados ni excepciones que
+pueden presentarse. Como parte del trabajo, la empresa desarrolladora deberá analizar el
+problema, identificar la información necesaria y proponer una solución coherente con los
+objetivos de la organización.
+Los equipos deberán prestar especial atención a las relaciones entre turistas, prestadores,
+emprendimientos, actividades, fechas disponibles, reservas, pagos, comentarios y
+valoraciones. También deberán determinar qué información corresponde administrar de
+forma centralizada y cuál es responsabilidad de cada prestador.
+A partir de esta descripción se espera que cada equipo construya una interpretación formal
+del sistema, identifique los actores involucrados y derive los requisitos y casos de uso
+necesarios para representar adecuadamente la solución.
+
+                                                                                                                          3
+                                                                                                 Proyectos TIC 2026
+
+La organización ha impuesto los siguientes requerimientos no funcionales en cuanto a
+tecnologías y herramientas:
+
+    ●​ Frontend: HTML, CSS, Thymeleaf, JavaScript, React, o cualquier framework de
+         frontend a elección de los desarrolladores
+
+    ●​ Backend: Java, Spring, SpringBoot y Maven
+    ●​ API REST con detalle de endpoints y su documentación correspondiente
+    ●​ Tests unitarios: cobertura de los principales casos de uso
+    ●​ Patrón de diseño MVC (Model-View-Controller), en capas
+    ●​ Base de datos SQL: PostgreSQL o MySQL, MER
+    ●​ Estilo de código: variables acordes al lenguaje, nombres en inglés
+    ●​ Documento de uso de la página web. (manuales de usuario)
+    ●​ Gestión de versiones: GIT
+
+Consideraciones:
+    ●​ El diseño, colores y parte de la usabilidad se deja a completa elección del equipo
+         con previa aceptación del cliente.
+    ●​ En una primera instancia, se dará importancia al correcto funcionamiento de los
+         principales requerimientos funcionales que serán definidos por el cliente.
+    ●​ Para la infraestructura de base de datos, se puede utilizar Google Cloud, AWS,
+         Docker o de forma local.
+
+Entregables
+    ●​ Acta fundacional de la empresa, con misión y visión.
+    ●​ Documento de Visión.
+    ●​ Documento de especificación de requerimientos con casos de usos.
+    ●​ Documentos de diseño del sistema (MER, diagramas de secuencia, diagramas de
+         flujo, diseño de la arquitectura, mockups y UML con el diagrama de clases del
+         modelo).
+    ●​ Actas de reunión con el cliente
+    ●​ Manuales de usuario (para usuario final, clientes prestatarios de servicio y
+         administradores).
+    ●​ Presentación comercial y presentación técnica.
+    ●​ Proyecto con código fuente de la solución.
+
+A tener en cuenta:
+    ●​ El equipo de desarrolladores deberá realizar todas las tareas competentes a la
+         ingeniería de software, desde el análisis de requerimientos, diseño, implementación
+         y pruebas del sistema.
+    ●​ Documentar el análisis de requerimientos, el diseño y toda actividad que el equipo
+         considere pertinente en función de lo expuesto en las primeras clases del
+         laboratorio.
+    ●​ Todos los integrantes del equipo deberán cumplir todos los roles en el proyecto.
+    ●​ Al finalizar el curso, cada equipo deberá presentar el producto final y será
+         interpelado por el cliente (docente) en una especie de defensa.
+
+                                                                                                                          4
+                                                                                                 Proyectos TIC 2026
+
+    ●​ El relevamiento de requerimientos serán entrevistas entre el equipo de
+         desarrolladores y el cliente en un espacio de la clase. En otro espacio se discutirán
+         consultas de índole técnico y académico.
+
+    ●​ Es responsabilidad del equipo estudiar parte del framework de desarrollo y de
+         frontend, así como analizar y discutir las soluciones.
+
+    ●​ Se recuerda el tema de la honestidad académica:
+       “...Reconocer y valorar el trabajo de otros, no apropiarse indebidamente del
+
+  pensamiento o la creación de terceros, es la base que permite producir y compartir
+                            conocimientos en una comunidad académica”.
+
+Recordar que este laboratorio tiene como objetivo introducir a los alumnos en una
+experiencia real de trabajo en equipo y creación de un producto de software pasando por
+todas las etapas en su desarrollo, por lo que la producción del mismo debe ser realizada
+enteramente por los estudiantes.
+
+                                                                                                                          5
+

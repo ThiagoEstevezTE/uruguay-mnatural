@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alta Funcionario</title>
+</head>
+<body>
+    <h1>Nuevo funcionario</h1>
+    <hr>
+    <form action="/api/v1/funcionario/new" method="POST">
+        <label for="nro">Num. Funcionario:</label>
+        <input type="number" name="nro" id="nro">
+        <label for="name">Nombre:</label>
+        <input type="text" name="name" id="name">
+        <input type="submit" value="Enviar">
+    </form>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Todos los cantantes</title>
+</head>
+<body>
+    <h1>Todos los cantantes</h1>
+    <table>
+      <tr>
+        <th><b>ID</b></th>
+        <th><b>Nombre</b></th>
+        <th><b>Detalle</b></th>
+      </tr>
+      <tr th:each="singer : ${singers}">
+          <td th:text="${singer.id}"></td>
+          <td th:text="${singer.firstName}"></td>
+          <td><a th:href="@{/singer/singerdetail/(${singer.id})}"> Detalle</a></td>
+      </tr>
+    </table>
+</body>
+</html>

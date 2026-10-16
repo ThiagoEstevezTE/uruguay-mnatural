@@ -1,0 +1,174 @@
+ACTA DE REUNIÓN N.º 1
+Relevamiento inicial de requerimientos
+TeroBytes · Cliente: Uruguay Mnatural
+1. Datos generales
+
+Dato              Detalle
+
+Acta N.º          1
+
+Proyecto          Plataforma digital Uruguay Mnatural (UM)
+
+Empresa           TeroBytes
+desarrolladora
+
+Fecha             ____ / ____ / 2026
+
+Hora de inicio / fin ____ : ____ a ____ : ____
+
+Lugar / modalidad Universidad de Montevideo — presencial
+
+ Tipo de reunión  Relevamiento inicial de requerimientos
+2. Participantes
+
+Nombre               Rol                        Organización
+
+                     Cliente                    Uruguay Mnatural
+                                                (docente)
+
+Fede                 Analista de                TeroBytes
+                     requerimientos
+
+Thiago               Analista de                TeroBytes
+                     requerimientos
+
+Tato                 Desarrollador              TeroBytes
+
+Lolo                 Responsable de             TeroBytes
+
+                     documentación
+
+3. Objetivo de la reunión
+
+Relevar con el cliente las reglas de negocio, procesos y condiciones que la letra del proyecto
+no define en detalle, a efectos de poder elaborar el documento de especificación de
+requerimientos de la plataforma.
+
+4. Temas tratados y definiciones acordadas
+4.1. Registro del turista
+
+Se acordó que el registro de un turista en la plataforma requerirá los siguientes datos: nombre,
+apellido, documento de identidad y fecha de nacimiento.
+
+Asimismo, el turista podrá guardar un medio de pago asociado a su cuenta, de modo de no
+tener que ingresarlo nuevamente en cada reserva.
+
+El equipo señala que la fecha de nacimiento permitirá además validar los requisitos de edad
+que cada actividad establezca.
+
+4.2. Registro y aprobación del prestador
+
+El cliente indicó que este es el punto más importante del sistema. El prestador se registrará en
+la plataforma ingresando los datos de su emprendimiento, y dicha solicitud quedará en estado
+pendiente de evaluación por parte de Uruguay Mnatural.
+
+Recién una vez que un administrador de Uruguay Mnatural apruebe la solicitud, el prestador
+podrá publicar actividades y su emprendimiento será visible en el portal público.
+
+En consecuencia, el sistema deberá contar con una bandeja de solicitudes desde la cual el
+administrador pueda aprobar o rechazar cada emprendimiento.
+
+4.3. Cupos de las actividades
+
+El cliente definió que las actividades no manejarán cupos, es decir que no se establecerá una
+cantidad máxima de participantes por instancia.
+
+El equipo dejó constancia de que este punto será nuevamente consultado, a efectos de
+determinar si el criterio alcanza a la totalidad de las actividades o si algún prestador podrá fijar
+un tope cuando la naturaleza de la experiencia lo requiera.
+
+4.4. Observaciones del turista al reservar
+
+Al momento de generar una reserva, el turista podrá dejar observaciones dirigidas al prestador,
+por ejemplo condiciones médicas o cualquier otra circunstancia que deba ser tenida en cuenta
+para la prestación del servicio.
+
+Dichas observaciones deberán estar disponibles para el prestador dentro de su espacio de
+gestión de reservas.
+
+4.5. Cancelación de la reserva por parte del turista
+
+El turista podrá cancelar una reserva únicamente cuando el prestador haya habilitado la
+cancelación para esa actividad, y siempre que lo haga con la anticipación mínima que el propio
+prestador determine.
+Por lo tanto, cada actividad deberá permitir configurar si admite cancelación y con cuánta
+anticipación.
+
+4.6. Cancelación de una fecha por parte del prestador
+
+Cuando sea el prestador quien cancele una fecha que ya cuenta con reservas pagas, la
+devolución del dinero dependerá del motivo de la cancelación. Según el caso, podrá
+corresponder la devolución total del importe, la devolución de un porcentaje del mismo, o bien
+ninguna devolución.
+
+Queda pendiente definir con el cliente los motivos concretos y el porcentaje de devolución
+asociado a cada uno.
+
+4.7. Pago de la reserva
+
+El cliente estableció que el pago es condición necesaria para la reserva: no se admitirá reservar
+y abonar el día de la actividad. Una reserva se considera confirmada únicamente cuando el
+pago ha sido procesado satisfactoriamente.
+
+4.8. Estados de la reserva
+
+Se acordaron los siguientes estados:
+
+Estado      Descripción
+
+Pendiente   La reserva fue generada y aguarda la confirmación
+            del pago. Su vigencia máxima es de dos (2) horas.
+            Durante ese lapso el lugar permanece retenido.
+
+Confirmada  El pago fue procesado satisfactoriamente por el
+            servicio externo.
+
+Cancelada   La reserva fue cancelada por el turista, cuando la
+            actividad lo permite, o bien venció el plazo de dos
+            horas sin registrarse el pago.
+
+Realizada   El prestador escaneó el código QR del turista el día
+            de la actividad, lo que confirma su asistencia.
+
+El equipo destaca que el vencimiento del plazo de dos horas deberá resolverse de forma
+automática, mediante un proceso que cancele las reservas pendientes vencidas y libere la
+disponibilidad correspondiente.
+
+4.9. Comentarios y valoraciones
+
+El turista podrá dejar un comentario y una valoración una vez transcurrida la fecha de la
+actividad, siempre que contara con una reserva para la misma.
+4.10. Notificación por correo y código QR
+
+Confirmada la reserva, el sistema enviará al turista un correo electrónico de confirmación que
+incluirá un número de reserva.
+
+A partir de dicho número se generará un código QR que el prestador escaneará el día de la
+actividad. El escaneo del código dejará la reserva en estado realizada, confirmando de este
+modo la asistencia del turista.
+
+5. Resumen de decisiones
+
+    ●​ El registro del turista requiere nombre, apellido, documento y fecha de nacimiento, y
+         admite guardar un medio de pago.
+
+    ●​ El alta del prestador queda pendiente de aprobación por parte de un administrador de
+         Uruguay Mnatural.
+
+    ●​ Las actividades no manejan cupos.
+    ●​ El turista puede dejar observaciones al reservar, visibles para el prestador.
+    ●​ La cancelación por parte del turista depende de que el prestador la habilite y de la
+
+         anticipación que éste defina.
+    ●​ Si el prestador cancela una fecha, la devolución será total, parcial o nula según el
+
+         motivo.
+    ●​ El pago es obligatorio para confirmar la reserva.
+    ●​ Los estados de la reserva son pendiente, confirmada, cancelada y realizada, con un
+
+         plazo máximo de dos horas para el pago.
+    ●​ El turista puede comentar y valorar luego de la fecha de la actividad.
+    ●​ Se envía un correo de confirmación con número de reserva y se genera un código QR
+
+         que el prestador escanea para marcar la reserva como realizada.
+
