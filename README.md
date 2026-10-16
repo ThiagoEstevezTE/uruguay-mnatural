@@ -5,28 +5,46 @@ Plataforma que conecta turistas con prestadores de actividades turísticas de to
 Software desarrollado por **TeroBytes** para su cliente Uruguay Mnatural.
 TeroBytes es la empresa de Patricio Saravia, Lorenzo Gianola, Federico Dolivo y Thiago Estevez (Proyecto TIC 2026, Universidad de Montevideo).
 
-## Bajarlo de GitHub (para el equipo)
+## Bajarlo de GitHub y correrlo (para el equipo)
 
-1. Aceptá la invitación al repositorio que te llega por mail desde GitHub.
-2. Bajá el proyecto. En IntelliJ: **File → New → Project from Version Control**, pegá la dirección del repositorio y tocá **Clone**. Desde la terminal es lo mismo:
+Se hace una sola vez:
+
+1. **Instalá dos cosas:**
+   - **Docker Desktop** (https://www.docker.com/products/docker-desktop/). Trae la base de datos lista, así no hay que instalar PostgreSQL ni configurar nada.
+   - **IntelliJ IDEA.** Si te pide el JDK, elegí *Download JDK* → versión **25**.
+2. **Aceptá la invitación** al repositorio que te llega por mail desde GitHub.
+3. **Bajá el proyecto.** En IntelliJ: **File → New → Project from Version Control**, pegá la dirección del repositorio y tocá **Clone**.
+
+Cada vez que quieras usar la app:
+
+1. **Abrí Docker Desktop** y esperá a que diga que está corriendo.
+2. **Prendé la base.** En IntelliJ, abrí la pestaña **Terminal** (abajo) y escribí:
 
    ```
-   git clone https://github.com/USUARIO/REPOSITORIO.git
+   docker compose up -d
    ```
 
-3. Pedile a Thiago el archivo `.env` (tiene la conexión a la base y no está en GitHub) y ponelo en la carpeta del proyecto, al lado de `pom.xml`.
-4. Corré la app como dice [Cómo correrlo](#cómo-correrlo), desde el paso 2.
-5. Para saber cómo se usa cada pantalla, mirá [`docs/GUIA_DE_USO.md`](docs/GUIA_DE_USO.md).
+3. **Levantá la app:** abrí `Proyectotic2026Application` y tocá el ▶ verde. O, en la misma terminal:
 
-Para traer lo último que subieron los demás: en IntelliJ, **Git → Pull**, o `git pull` en la terminal.
+   ```
+   ./mvnw spring-boot:run
+   ```
+
+4. **Abrí http://localhost:8080** y entrá con cualquiera de las [cuentas de prueba](#cuentas-de-prueba). Para saber cómo se usa cada pantalla, mirá [`docs/GUIA_DE_USO.md`](docs/GUIA_DE_USO.md).
+
+No hace falta ningún archivo `.env`: sin él, la app se conecta sola a la base de Docker. La primera vez crea las tablas y carga los datos de prueba.
+
+- Para apagar la base: `docker compose down` (los datos quedan guardados).
+- Para traer lo último que subieron los demás: en IntelliJ, **Git → Pull**.
+- Si `docker compose up -d` dice que el puerto 5432 está ocupado, es porque ya tenés un PostgreSQL instalado y prendido en tu compu. Apagalo, o usalo con un `.env` como dice la sección siguiente.
 
 ## Qué se necesita
 
 - **JDK 25**.
-- **Una base PostgreSQL**: Supabase o un Postgres local.
+- **Una base PostgreSQL**: la de Docker (`docker-compose.yml`), Supabase o un Postgres instalado en tu compu.
 - Maven no hace falta: el proyecto trae el Maven Wrapper (`mvnw`).
 
-## Cómo correrlo
+## Cómo correrlo con otra base (Supabase o Postgres propio)
 
 1. Copiá `.env.example` como `.env` y completá los datos de la base:
 
@@ -37,17 +55,9 @@ Para traer lo último que subieron los demás: en IntelliJ, **Git → Pull**, o 
    ```
 
    - **Supabase:** en el proyecto, *Connect → JDBC → Session pooler*. Copiá la URL sin `user` ni `password`; esos dos datos van en `DB_USER` y `DB_PASSWORD`.
-   - **Postgres local:** `jdbc:postgresql://localhost:5432/uymnatural`, después de crear la base con `createdb uymnatural`.
+   - **Postgres propio:** `jdbc:postgresql://localhost:5432/uymnatural`, después de crear la base con `createdb uymnatural`.
 
-2. Levantá la app:
-
-   ```
-   ./mvnw spring-boot:run
-   ```
-
-   En IntelliJ también se puede correr `Proyectotic2026Application`.
-
-3. Abrí http://localhost:8080.
+2. Levantá la app con `./mvnw spring-boot:run` (o con el ▶ de IntelliJ) y abrí http://localhost:8080.
 
 Por defecto la app **no borra nada** al arrancar (`DB_DDL_AUTO=update`): crea las tablas que falten y carga los datos de ejemplo solo si la base está vacía. Es lo que hay que usar con Supabase.
 

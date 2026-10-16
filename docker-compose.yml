@@ -1,0 +1,17 @@
+# Base PostgreSQL para correr la app en la compu de cada uno, sin Supabase ni .env.
+# Se levanta con: docker compose up -d   (y se apaga con: docker compose down)
+# Los datos quedan guardados en el volumen "datos" aunque se apague.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: uymnatural
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos:/var/lib/postgresql/data
+
+volumes:
+  datos:
