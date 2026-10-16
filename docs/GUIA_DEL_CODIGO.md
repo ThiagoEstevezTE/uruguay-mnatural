@@ -355,6 +355,7 @@ Detalle de la actividad → elige fecha → /tourist/book/{fecha}
 | La reserva queda PENDIENTE y vence en 2 horas, o al cierre de reservas de esa fecha si es antes | Acta 1, punto 4.8 |
 
 - **Lugares ocupados (`getTakenPlaces`):** cuentan las reservas confirmadas, las realizadas y las pendientes que todavía no vencieron. Por eso una reserva pendiente "retiene el lugar", como dice el acta.
+- **No se vende de más** ⭐: `createBooking` bloquea la fecha con `findLockedById` (`SELECT ... FOR UPDATE`) antes de contar los lugares. Si dos turistas reservan el último lugar a la vez, el segundo espera, cuenta de nuevo y recibe "No quedan lugares". Lo prueba `BookingConcurrencyTest`.
 - **Número de reserva:** `UM-` seguido de 6 caracteres al azar (`SecureRandom`). No usa letras que se confunden (O/0, I/1) y se verifica que no esté repetido.
 - **Estados** (Acta 1, punto 4.8): `PENDING` → `CONFIRMED` → `COMPLETED`, o `CANCELLED` en cualquier momento antes. `cancelledBy` guarda quién canceló: el turista, el prestador o el sistema.
 
@@ -516,6 +517,7 @@ src/main/resources/
 - **¿Qué pasa si el servicio de pagos se cae?** La reserva queda pendiente, el intento se guarda con estado ERROR y se le pide al turista que reintente. Nunca se confirma sin pago aprobado (ver 2.12).
 - **¿Qué pasa si alguien hace doble clic en "Pagar"?** Se bloquea la reserva mientras se paga (`SELECT ... FOR UPDATE`): el segundo pedido espera y encuentra la reserva ya confirmada. Se cobra una sola vez (ver 2.12).
 - **¿Cómo se cancelan solas las reservas vencidas?** Con `@Scheduled`: un método que Spring ejecuta cada minuto (ver 2.11).
+- **¿Qué pasa si dos turistas reservan el último lugar a la vez?** Se bloquea la fecha mientras se cuenta el cupo: uno reserva y el otro recibe "No quedan lugares" (ver 2.11).
 - **¿Cómo manejan el cupo si el acta dice que no hay?** Es opcional por fecha. Si el prestador no lo pone, no hay límite. Quedó así porque el acta dice que se va a volver a consultar.
 - **¿Qué es `@Transactional`?** Que todo lo que hace el método se guarda junto o no se guarda nada. Por ejemplo, el prestador y su emprendimiento se crean juntos.
 - **¿Qué es la inyección de dependencias?** Spring crea los objetos (services, repositorios) y los pasa donde dice `@Autowired`. Así ninguna clase hace `new` de sus dependencias, y en los tests se pueden reemplazar por mocks.

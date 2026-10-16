@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import uy.edu.um.proyectotic2026.dto.ChargeResponseDTO;
 import uy.edu.um.proyectotic2026.entities.*;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
@@ -37,7 +38,8 @@ class BookingConcurrencyTest {
     @Autowired
     private ActivityInstanceRepository instanceRepo;
 
-    @Autowired
+    // Repositorio real, pero en un test se le agrega una demora para provocar el choque
+    @MockitoSpyBean
     private BookingRepository bookingRepo;
 
     @MockitoBean
@@ -101,5 +103,24 @@ class BookingConcurrencyTest {
         assertEquals(1, results.stream().filter(r -> r instanceof Booking).count());
         assertEquals(1, results.stream().filter(r -> r instanceof InvalidDataException).count());
         assertEquals(BookingStatus.CONFIRMED, bookingRepo.findById(booking.getId()).orElseThrow().getStatus());
+    }
+
+    @Test
+    void twoBookingsAtTheSameTimeDoNotExceedCapacity() throws Exception {
+        instance.setMaxCapacity(1);
+        instanceRepo.save(instance);
+        // Entre contar los lugares y guardar se genera el numero de reserva: ahi se espera un poco,
+        // asi las dos reservas cuentan los lugares antes de que se guarde alguna
+        doAnswer(call -> {
+            Thread.sleep(300);
+            return false;
+        }).when(bookingRepo).existsByCode(anyString());
+
+        List<Object> results = runTogether(
+                () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null),
+                () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null));
+
+        assertEquals(1, results.stream().filter(r -> r instanceof Booking).count());
+        assertEquals(1, results.stream().filter(r -> r instanceof InvalidDataException).count());
     }
 }

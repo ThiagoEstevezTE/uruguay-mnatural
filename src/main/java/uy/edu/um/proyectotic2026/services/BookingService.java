@@ -71,6 +71,9 @@ public class BookingService {
     public Booking createBooking(Long instanceId, String touristEmail, Integer participants, String observations)
             throws EntityNotFoundException, InvalidDataException {
 
+        // Se bloquea la fecha mientras se controla el cupo: dos reservas a la vez no pueden pasarse.
+        // Despues getInstanceToBook recibe esta misma fecha ya bloqueada.
+        instanceRepo.findLockedById(instanceId);
         ActivityInstance instance = getInstanceToBook(instanceId);
         Activity activity = instance.getActivity();
         Tourist tourist = touristRepo.findByEmail(touristEmail)
