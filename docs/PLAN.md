@@ -6,6 +6,8 @@ Este es el plan **tal como estaba pensado** al 16/10/2026. No es obligatorio: Th
 - 🟡 **Idea general**: se sabía qué hacer, pero el código no se había diseñado.
 - ⚪ **Futuro**: sale de las actas o de la letra, pero no se planificó.
 
+> **Actualización:** los pasos 6, 7 y 8 y las "Otras cosas pendientes" de más abajo ya están hechos: controllers REST, registro web, login, PostgreSQL, el resto del MER y las pruebas. Lo único que sigue abierto son los puntos de las actas para confirmar con el cliente, al final de este archivo. El resto del documento queda como registro de cómo se pensó.
+
 | Paso | Qué | Estado |
 |---|---|---|
 | 1–5 | Configuración, entidades, repositorios, service | ✅ hechos (ver `HISTORIAL.md`) |
