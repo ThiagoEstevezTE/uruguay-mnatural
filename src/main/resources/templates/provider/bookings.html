@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reservas')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<header class="panel-header">
+    <div class="container">
+        <h1 class="h3 mb-0">Reservas de mis actividades</h1>
+        <p class="text-muted mb-0">Con las observaciones de cada turista, para organizar la actividad.</p>
+    </div>
+</header>
+
+<main class="container">
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <!-- Registrar asistencia: el numero de reserva es el que esta en el QR del turista -->
+    <form class="card card-um p-4 mb-4" th:action="@{/provider/bookings/check-in}" method="post">
+        <h2 class="h5"><i class="bi bi-qr-code-scan"></i> Registrar asistencia</h2>
+        <p class="small text-muted">Escaneá el QR del turista o escribí su número de reserva. La reserva pasa a "Realizada".</p>
+        <div class="input-group" style="max-width: 420px">
+            <input type="text" name="code" class="form-control font-monospace text-uppercase" placeholder="UM-XXXXXX" required>
+            <button type="submit" class="btn btn-primary">Registrar</button>
+        </div>
+    </form>
+
+    <div th:if="${bookings.isEmpty()}" class="card card-um p-4 text-center text-muted">Todavía no hay reservas.</div>
+
+    <div class="table-responsive table-um card-um" th:unless="${bookings.isEmpty()}">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Actividad</th>
+                <th>Turista</th>
+                <th>Personas</th>
+                <th>Observaciones</th>
+                <th>Reserva</th>
+                <th>Estado</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="booking : ${bookings}">
+                <td class="text-nowrap text-capitalize" th:text="${#temporals.format(booking.instance.startDateTime, 'EEE dd/MM HH:mm')}"></td>
+                <td th:text="${booking.activity.name}"></td>
+                <td>
+                    <span th:text="${booking.tourist.fullName}"></span>
+                    <div class="small text-muted" th:text="${booking.tourist.email}"></div>
+                </td>
+                <td th:text="${booking.participants}"></td>
+                <td class="small" th:text="${booking.observations ?: '-'}"></td>
+                <td class="font-monospace small" th:text="${booking.code}"></td>
+                <td><span th:replace="~{fragments/layout :: bookingStatus(${booking.status})}"></span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

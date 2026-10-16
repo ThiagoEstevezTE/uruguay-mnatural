@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reserva ' + ${booking.code})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <a th:href="@{/tourist/bookings}" class="small"><i class="bi bi-arrow-left"></i> Mis reservas</a>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2 mb-4">
+        <h1 class="h3 section-title mb-0">Reserva <span class="font-monospace" th:text="${booking.code}"></span></h1>
+        <span class="fs-6" th:replace="~{fragments/layout :: bookingStatus(${booking.status})}"></span>
+    </div>
+
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+
+            <!-- Confirmada: el QR que escanea el prestador el dia de la actividad -->
+            <div class="card card-um p-4 mb-3 text-center" th:if="${booking.status.name() == 'CONFIRMED'}">
+                <h2 class="h5">Tu entrada</h2>
+                <p class="text-muted small">Mostrale este código al prestador el día de la actividad.</p>
+                <img th:src="@{/tourist/bookings/{id}/qr.png(id=${booking.id})}" alt="Código QR de la reserva"
+                     width="200" height="200" class="mx-auto">
+                <p class="font-monospace fs-4 fw-bold mb-0" th:text="${booking.code}"></p>
+            </div>
+
+            <div class="card card-um p-4 mb-3" th:if="${booking.status.name() == 'PENDING'}">
+                <p class="mb-3">
+                    <i class="bi bi-hourglass-split"></i>
+                    Falta el pago. Tu lugar está guardado hasta las
+                    <strong th:text="${#temporals.format(booking.expiresAt, 'HH:mm')}"></strong>.
+                </p>
+                <a class="btn btn-accent" th:href="@{/tourist/bookings/{id}/pay(id=${booking.id})}">Pagar ahora</a>
+            </div>
+
+            <div class="card card-um p-4 mb-3" th:if="${booking.status.name() == 'COMPLETED'}">
+                <p class="mb-0"><i class="bi bi-check2-circle"></i> Asistencia registrada el
+                    <span th:text="${#temporals.format(booking.checkinDate, 'dd/MM/yyyy HH:mm')}"></span>.</p>
+            </div>
+
+            <div class="card card-um p-4 mb-3" th:if="${booking.status.name() == 'CANCELLED'}">
+                <p class="mb-0">
+                    <i class="bi bi-x-circle"></i>
+                    <span th:switch="${booking.cancelledBy?.name()}">
+                        <span th:case="'TOURIST'">Cancelaste esta reserva</span>
+                        <span th:case="'PROVIDER'">El prestador canceló esta fecha</span>
+                        <span th:case="*">Se canceló porque pasaron 2 horas sin pagar</span>
+                    </span>
+                    el <span th:text="${#temporals.format(booking.cancellationDate, 'dd/MM/yyyy HH:mm')}"></span>.
+                </p>
+            </div>
+
+            <!-- Valorar: solo despues de la actividad -->
+            <form class="card card-um p-4 mb-3" th:if="${canRate}" method="post"
+                  th:action="@{/tourist/bookings/{id}/rate(id=${booking.id})}">
+                <h2 class="h5">¿Qué te pareció?</h2>
+                <div class="mb-3">
+                    <div class="form-check form-check-inline" th:each="n : ${#numbers.sequence(1, 5)}">
+                        <input class="form-check-input" type="radio" name="score" th:id="${'score' + n}" th:value="${n}" required>
+                        <label class="form-check-label" th:for="${'score' + n}">
+                            <span th:text="${n}"></span> <i class="bi bi-star-fill stars"></i>
+                        </label>
+                    </div>
+                </div>
+                <textarea name="comment" class="form-control mb-3" rows="3" maxlength="1000"
+                          placeholder="Contale a otros turistas cómo fue la experiencia"></textarea>
+                <button type="submit" class="btn btn-primary">Enviar valoración</button>
+            </form>
+
+            <div class="card card-um p-4 mb-3" th:if="${booking.rating}">
+                <h2 class="h5">Tu valoración</h2>
+                <span th:replace="~{fragments/layout :: stars(${booking.rating.score})}"></span>
+                <p class="mb-0 mt-2" th:text="${booking.rating.comment}"></p>
+            </div>
+
+            <!-- Pagos: cada intento queda registrado -->
+            <div class="card card-um p-4 mb-3" th:unless="${booking.payments.isEmpty()}">
+                <h2 class="h5">Pagos</h2>
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-1" th:each="payment : ${booking.payments}">
+                        <span th:text="${#temporals.format(payment.date, 'dd/MM HH:mm')}"></span> ·
+                        <span th:text="${payment.cardBrand + ' ****' + payment.cardLastDigits}"></span> ·
+                        <span th:switch="${payment.status.name()}">
+                            <span th:case="'APPROVED'" class="text-success">Aprobado</span>
+                            <span th:case="'REJECTED'" class="text-danger">Rechazado</span>
+                            <span th:case="*" class="text-muted">Sin respuesta del servicio</span>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <form th:if="${canCancel}" method="post" th:action="@{/tourist/bookings/{id}/cancel(id=${booking.id})}"
+                  onsubmit="return confirm('¿Seguro que querés cancelar la reserva?');">
+                <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x-lg"></i> Cancelar reserva</button>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <div th:replace="~{tourist/booking-summary :: summary(${booking})}"></div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -45,6 +45,15 @@ public class DataLoader implements CommandLineRunner {
     private ActivityRepository activityRepo;
 
     @Autowired
+    private ActivityInstanceRepository instanceRepo;
+
+    @Autowired
+    private BookingRepository bookingRepo;
+
+    @Autowired
+    private RatingRepository ratingRepo;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     private String password;
@@ -64,6 +73,7 @@ public class DataLoader implements CommandLineRunner {
         loadCatalogs();
         loadUsers();
         loadActivities();
+        loadBookingsAndRatings();
     }
 
     // Tipos de actividad y equipamiento (los ejemplos de la letra)
@@ -98,6 +108,11 @@ public class DataLoader implements CommandLineRunner {
                 .build());
 
         // Prestadores aprobados (ya publican) y uno pendiente (para mostrar la bandeja del admin)
+        // Otros turistas, para que haya valoraciones de varias personas
+        createTourist("lucia@demo.uy", "Lucía", "Pereira", "51234567", LocalDate.of(1995, 9, 2));
+        createTourist("diego@demo.uy", "Diego", "Rodríguez", "42345678", LocalDate.of(1988, 1, 23));
+        createTourist("ana@demo.uy", "Ana", "Costa", "53456789", LocalDate.of(2001, 11, 30));
+
         createProvider("prestador@demo.uy", "Martín Silva", "31234567", ProviderType.INDIVIDUAL,
                 "Cabalgatas del Polonio", "Cabalgatas por la costa rochense, entre dunas y lobos marinos.",
                 "Ruta 10 km 264", "Cabo Polonio", true);
@@ -181,6 +196,44 @@ public class DataLoader implements CommandLineRunner {
         addInstances(a, LocalTime.of(9, 30), 1, 2, 5, 7, 9);
     }
 
+    // Reservas en todos los estados y valoraciones, para mostrar el sistema funcionando
+    private void loadBookingsAndRatings() {
+        Activity cabalgata = activityRepo.findAll().stream()
+                .filter(a -> a.getName().startsWith("Cabalgata")).findFirst().orElseThrow();
+        Activity barrio = activityRepo.findAll().stream()
+                .filter(a -> a.getName().startsWith("Recorrido")).findFirst().orElseThrow();
+        Activity kayak = activityRepo.findAll().stream()
+                .filter(a -> a.getName().startsWith("Kayak")).findFirst().orElseThrow();
+
+        // Fechas que ya pasaron, con reservas realizadas y valoradas
+        ActivityInstance pastCabalgata = addPastInstance(cabalgata, 9, LocalTime.of(18, 0));
+        rate(booking(pastCabalgata, "lucia@demo.uy", 2, BookingStatus.COMPLETED, "UM-LUC1A2"), 5,
+                "Una experiencia increíble. El atardecer desde las dunas es otra cosa y Martín es un genio.");
+        rate(booking(pastCabalgata, "diego@demo.uy", 4, BookingStatus.COMPLETED, "UM-D1EG04"), 4,
+                "Muy lindo paseo, ideal para ir en familia. Llevá protector solar.");
+
+        ActivityInstance pastBarrio = addPastInstance(barrio, 6, LocalTime.of(11, 0));
+        rate(booking(pastBarrio, "ana@demo.uy", 1, BookingStatus.COMPLETED, "UM-ANA7C5"), 5,
+                "Laura sabe muchísimo de historia. Súper recomendable.");
+        rate(booking(pastBarrio, "turista@demo.uy", 2, BookingStatus.COMPLETED, "UM-SOF1A9"), 4,
+                "Muy buen recorrido, aprendimos un montón sobre la ciudad.");
+
+        // Una fecha pasada que la turista de prueba todavia puede valorar
+        ActivityInstance pastKayak = addPastInstance(kayak, 3, LocalTime.of(9, 30));
+        booking(pastKayak, "turista@demo.uy", 2, BookingStatus.CONFIRMED, "UM-KAY4K2");
+
+        // Hoy: reserva confirmada para mostrar el registro de asistencia (check-in) del prestador
+        ActivityInstance today = addInstance(cabalgata,
+                LocalDateTime.now().plusHours(2).withMinute(0).withSecond(0).withNano(0));
+        booking(today, "turista@demo.uy", 2, BookingStatus.CONFIRMED, "UM-H0Y2Q8");
+
+        // Proxima: reserva confirmada que todavia se puede cancelar
+        ActivityInstance next = cabalgata.getUpcomingInstances().stream()
+                .filter(i -> i.getStartDateTime().isAfter(LocalDateTime.now().plusDays(3)))
+                .findFirst().orElseThrow();
+        booking(next, "turista@demo.uy", 3, BookingStatus.CONFIRMED, "UM-PROX7A");
+    }
+
     // ---------- Metodos de ayuda ----------
 
     private void createProvider(String email, String name, String document, ProviderType type,
@@ -243,10 +296,71 @@ public class DataLoader implements CommandLineRunner {
     // Agrega fechas a la actividad: "dentro de N dias, a tal hora"
     private void addInstances(Activity activity, LocalTime time, int... daysFromToday) {
         for (int days : daysFromToday)
-            activity.addInstance(ActivityInstance.builder()
-                    .startDateTime(LocalDate.now().plusDays(days).atTime(time))
-                    .build());
-        activityRepo.save(activity);
+            addInstance(activity, LocalDate.now().plusDays(days).atTime(time));
+    }
+
+    private ActivityInstance addInstance(Activity activity, LocalDateTime start) {
+        ActivityInstance instance = ActivityInstance.builder().startDateTime(start).build();
+        activity.addInstance(instance);
+        return instanceRepo.save(instance);
+    }
+
+    private void createTourist(String email, String firstName, String lastName, String document, LocalDate birthDate) {
+        touristRepo.save(Tourist.builder()
+                .email(email)
+                .password(password)
+                .role(Role.TOURIST)
+                .firstName(firstName)
+                .lastName(lastName)
+                .document(document)
+                .birthDate(birthDate)
+                .build());
+    }
+
+    private ActivityInstance addPastInstance(Activity activity, int daysAgo, LocalTime time) {
+        return addInstance(activity, LocalDate.now().minusDays(daysAgo).atTime(time));
+    }
+
+    // Crea una reserva ya pagada (con su pago aprobado) en el estado indicado
+    private Booking booking(ActivityInstance instance, String touristEmail, int participants,
+                            BookingStatus status, String code) {
+
+        LocalDateTime created = instance.getStartDateTime().minusDays(5);
+        BigDecimal total = instance.getActivity().getPrice().multiply(BigDecimal.valueOf(participants));
+
+        Booking booking = Booking.builder()
+                .instance(instance)
+                .tourist(touristRepo.findByEmail(touristEmail).orElseThrow())
+                .code(code)
+                .participants(participants)
+                .totalAmount(total)
+                .status(status)
+                .createdAt(created)
+                .expiresAt(created.plusHours(2))
+                .checkinDate(status == BookingStatus.COMPLETED ? instance.getStartDateTime() : null)
+                .build();
+
+        booking.getPayments().add(Payment.builder()
+                .booking(booking)
+                .amount(total)
+                .status(PaymentStatus.APPROVED)
+                .externalTransactionId("txn_demo_" + code.substring(3).toLowerCase())
+                .cardBrand("Visa")
+                .cardLastDigits("4242")
+                .message("Pago aprobado")
+                .date(created.plusMinutes(10))
+                .build());
+
+        return bookingRepo.save(booking);
+    }
+
+    private void rate(Booking booking, int score, String comment) {
+        ratingRepo.save(Rating.builder()
+                .booking(booking)
+                .score(score)
+                .comment(comment)
+                .date(booking.getInstance().getStartDateTime().plusDays(1))
+                .build());
     }
 
     private Business getBusiness(String providerEmail) {

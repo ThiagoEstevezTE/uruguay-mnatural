@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Pagar reserva')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <h1 class="h3 section-title mb-4">Pagar la reserva</h1>
+
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <!-- Si la reserva ya no esta pendiente (pagada o cancelada) no se muestra el formulario -->
+            <div th:if="${booking.status.name() != 'PENDING'}" class="card card-um p-4">
+                <p class="mb-2">Esta reserva está <span th:replace="~{fragments/layout :: bookingStatus(${booking.status})}"></span></p>
+                <a class="btn btn-primary" th:href="@{/tourist/bookings/{id}(id=${booking.id})}">Ver la reserva</a>
+            </div>
+
+            <form th:if="${booking.status.name() == 'PENDING'}" class="card card-um p-4"
+                  th:action="@{/tourist/bookings/{id}/pay(id=${booking.id})}" method="post">
+                <div class="alert alert-warning small">
+                    <i class="bi bi-hourglass-split"></i>
+                    Tu lugar está guardado hasta las <strong th:text="${#temporals.format(booking.expiresAt, 'HH:mm')}"></strong>.
+                    Si no se paga antes, la reserva se cancela sola.
+                </div>
+
+                <h2 class="h6 text-uppercase text-muted mb-3">Tarjeta de crédito o débito</h2>
+                <label class="form-label" for="cardNumber">Número de tarjeta</label>
+                <input type="text" id="cardNumber" name="cardNumber" class="form-control mb-3" inputmode="numeric"
+                       placeholder="4242 4242 4242 4242" autocomplete="off" required>
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" for="expiry">Vencimiento</label>
+                        <input type="text" id="expiry" class="form-control" placeholder="MM/AA" autocomplete="off">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="cvv">CVV</label>
+                        <input type="text" id="cvv" class="form-control" placeholder="123" autocomplete="off">
+                    </div>
+                </div>
+                <p class="small text-muted">
+                    <i class="bi bi-shield-lock"></i>
+                    El pago lo procesa un servicio de pagos externo. Uruguay Mnatural no guarda los datos de tu tarjeta,
+                    solo la marca y los últimos 4 números.
+                </p>
+                <button type="submit" class="btn btn-accent btn-lg w-100">
+                    Pagar <span th:text="${'$ ' + #numbers.formatDecimal(booking.totalAmount, 1, 'POINT', 0, 'COMMA')}"></span>
+                </button>
+            </form>
+
+            <div class="card card-um p-3 mt-3 small" th:if="${booking.status.name() == 'PENDING'}">
+                <strong><i class="bi bi-tools"></i> Tarjetas de prueba (servicio de pagos simulado)</strong>
+                <ul class="mb-0 mt-1">
+                    <li><code>4242 4242 4242 4242</code>: pago aprobado</li>
+                    <li><code>4000 0000 0000 0002</code>: pago rechazado</li>
+                    <li><code>4000 0000 0000 0119</code>: el servicio de pagos no responde</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div th:replace="~{tourist/booking-summary :: summary(${booking})}"></div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

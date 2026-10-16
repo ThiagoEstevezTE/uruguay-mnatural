@@ -40,8 +40,8 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/?logout")
                         .permitAll()
                 )
-                // La API REST la usan otros sistemas, no formularios: no lleva token CSRF
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
+                // Las APIs las usan otros sistemas, no formularios: no llevan token CSRF
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/fake-gateway/**"));
 
         return http.build();
     }

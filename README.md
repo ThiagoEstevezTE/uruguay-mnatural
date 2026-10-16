@@ -38,12 +38,23 @@ Cada vez que arranca, la app crea las tablas de cero y carga los datos de ejempl
 
 Todas usan la contraseña `demo1234`.
 
-| Rol | Email |
+| Rol | Email | Qué tiene cargado |
+|---|---|---|
+| Administrador | admin@uymnatural.uy | Una solicitud pendiente para aprobar |
+| Turista | turista@demo.uy | Reservas confirmadas (una es hoy), una realizada y una para valorar |
+| Prestador aprobado | prestador@demo.uy | Cabalgatas del Polonio, con reservas y valoraciones |
+| Prestador aprobado | sierras@demo.uy, colonia@demo.uy, kayak@demo.uy | Otros emprendimientos con actividades |
+| Prestador pendiente | pendiente@demo.uy | Bodega Los Cerros, esperando aprobación |
+
+## Tarjetas de prueba
+
+El pago lo procesa un **servicio de pagos externo simulado** (`simulator/FakePaymentGatewayController`). La app lo llama por HTTP, igual que llamaría a uno real.
+
+| Tarjeta | Resultado |
 |---|---|
-| Administrador | admin@uymnatural.uy |
-| Turista | turista@demo.uy |
-| Prestador aprobado | prestador@demo.uy |
-| Prestador pendiente de aprobación | pendiente@demo.uy |
+| `4242 4242 4242 4242` | Pago aprobado: la reserva se confirma |
+| `4000 0000 0000 0002` | Pago rechazado: la reserva sigue pendiente |
+| `4000 0000 0000 0119` | El servicio no responde: la reserva sigue pendiente |
 
 ## Tests
 

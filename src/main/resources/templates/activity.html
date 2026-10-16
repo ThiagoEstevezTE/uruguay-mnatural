@@ -15,6 +15,11 @@
                 <span class="badge badge-type me-1" th:each="typeName : ${activity.typeNames}" th:text="${typeName}"></span>
             </div>
             <h1 class="h2 section-title mt-2 mb-1" th:text="${activity.name}"></h1>
+            <p class="mb-1" th:if="${average}">
+                <span th:replace="~{fragments/layout :: stars(${averageStars})}"></span>
+                <strong th:text="${average}"></strong>
+                <span class="text-muted small" th:text="${'(' + #lists.size(ratings) + ' valoraciones)'}"></span>
+            </p>
             <p class="text-muted">
                 <i class="bi bi-geo-alt"></i>
                 <span th:text="${activity.locality.name + ', ' + activity.locality.department.name}"></span>
@@ -39,7 +44,7 @@
                             <li class="mb-2">
                                 <i class="bi bi-arrow-counterclockwise"></i>
                                 <span th:if="${activity.allowsCancellation}"
-                                      th:text="${'Cancelación gratuita hasta ' + activity.cancellationMinHours + ' h antes'}"></span>
+                                      th:text="${'Se puede cancelar hasta ' + activity.cancellationMinHours + ' h antes'}"></span>
                                 <span th:unless="${activity.allowsCancellation}">No admite cancelación</span>
                             </li>
                             <li>
@@ -61,6 +66,19 @@
                             </li>
                         </ul>
                     </div>
+                </div>
+            </div>
+
+            <div class="card card-um p-4 mb-4">
+                <h2 class="h5">Opiniones de otros turistas</h2>
+                <p class="text-muted small mb-0" th:if="${ratings.isEmpty()}">Todavía no hay valoraciones.</p>
+                <div class="border-top pt-3 mt-2" th:each="rating : ${ratings}">
+                    <div class="d-flex justify-content-between">
+                        <strong th:text="${rating.booking.tourist.firstName}"></strong>
+                        <span class="small text-muted" th:text="${#temporals.format(rating.date, 'dd/MM/yyyy')}"></span>
+                    </div>
+                    <span th:replace="~{fragments/layout :: stars(${rating.score})}"></span>
+                    <p class="mb-2 mt-1" th:if="${rating.comment}" th:text="${rating.comment}"></p>
                 </div>
             </div>
         </div>

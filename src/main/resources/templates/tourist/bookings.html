@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mis reservas')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <h1 class="h3 section-title mb-4">Mis reservas</h1>
+
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <div th:if="${bookings.isEmpty()}" class="card card-um p-5 text-center text-muted">
+        <i class="bi bi-calendar2-heart fs-1"></i>
+        <p>Todavía no tenés reservas.</p>
+        <a class="btn btn-primary" th:href="@{/activities}">Buscar actividades</a>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6" th:each="booking : ${bookings}">
+            <div class="card card-um h-100">
+                <div class="row g-0 h-100">
+                    <div class="col-3">
+                        <div th:replace="~{fragments/cards :: cover(${booking.activity}, '100%')}"></div>
+                    </div>
+                    <div class="col-9 p-3 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <h2 class="h6 fw-bold mb-1" th:text="${booking.activity.name}"></h2>
+                            <span th:replace="~{fragments/layout :: bookingStatus(${booking.status})}"></span>
+                        </div>
+                        <p class="small text-muted mb-1 text-capitalize">
+                            <i class="bi bi-calendar-event"></i>
+                            <span th:text="${#temporals.format(booking.instance.startDateTime, 'EEE dd/MM/yyyy · HH:mm')}"></span>
+                        </p>
+                        <p class="small text-muted mb-2">
+                            <span th:text="${booking.code}" class="font-monospace"></span> ·
+                            <span th:text="${booking.participants == 1} ? '1 persona' : ${booking.participants + ' personas'}"></span> ·
+                            <span th:text="${'$ ' + #numbers.formatDecimal(booking.totalAmount, 1, 'POINT', 0, 'COMMA')}"></span>
+                        </p>
+                        <div class="mt-auto d-flex gap-2">
+                            <a th:if="${booking.status.name() == 'PENDING'}" class="btn btn-sm btn-accent"
+                               th:href="@{/tourist/bookings/{id}/pay(id=${booking.id})}">Pagar</a>
+                            <a class="btn btn-sm btn-outline-primary" th:href="@{/tourist/bookings/{id}(id=${booking.id})}">Ver detalle</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

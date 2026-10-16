@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Resumen de una reserva: se usa en la pantalla de pago y en el detalle -->
+<div th:fragment="summary(booking)" class="card card-um">
+    <div th:replace="~{fragments/cards :: cover(${booking.activity}, '110px')}"></div>
+    <div class="p-4">
+        <h2 class="h5 mb-1" th:text="${booking.activity.name}"></h2>
+        <p class="small text-muted" th:text="${booking.activity.business.name}"></p>
+        <ul class="list-unstyled info-list small mb-3">
+            <li class="mb-1"><i class="bi bi-calendar-event"></i>
+                <span class="text-capitalize" th:text="${#temporals.format(booking.instance.startDateTime, 'EEEE dd/MM/yyyy · HH:mm')}"></span></li>
+            <li class="mb-1"><i class="bi bi-geo-alt"></i>
+                <span th:text="${booking.activity.business.address + ', ' + booking.activity.locality.name}"></span></li>
+            <li class="mb-1"><i class="bi bi-people"></i>
+                <span th:text="${booking.participants == 1} ? '1 persona' : ${booking.participants + ' personas'}"></span></li>
+            <li th:if="${booking.observations}"><i class="bi bi-chat-left-text"></i>
+                <span th:text="${booking.observations}"></span></li>
+        </ul>
+        <div class="d-flex justify-content-between border-top pt-3">
+            <span>Total</span>
+            <span class="price fs-5" th:text="${'$ ' + #numbers.formatDecimal(booking.totalAmount, 1, 'POINT', 0, 'COMMA')}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>

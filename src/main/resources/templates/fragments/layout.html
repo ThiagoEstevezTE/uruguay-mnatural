@@ -31,13 +31,16 @@
                 <li class="nav-item" sec:authorize="hasRole('PROVIDER')">
                     <a class="nav-link" th:href="@{/provider}">Mi emprendimiento</a>
                 </li>
+                <li class="nav-item" sec:authorize="hasRole('PROVIDER')">
+                    <a class="nav-link" th:href="@{/provider/bookings}">Reservas</a>
+                </li>
                 <li class="nav-item" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link" th:href="@{/admin}">Administración</a>
                 </li>
             </ul>
 
             <div class="d-flex align-items-center gap-2" sec:authorize="isAnonymous()">
-                <a class="btn btn-link nav-link" th:href="@{/register/provider}">Soy prestador</a>
+                <a class="nav-link" th:href="@{/register/provider}">Soy prestador</a>
                 <a class="btn btn-outline-light btn-sm" th:href="@{/login}">Ingresar</a>
                 <a class="btn btn-accent btn-sm" th:href="@{/register/tourist}">Crear cuenta</a>
             </div>
@@ -71,6 +74,19 @@
     <span th:case="'PENDING'" class="badge rounded-pill text-bg-warning">Pendiente</span>
     <span th:case="'APPROVED'" class="badge rounded-pill text-bg-success">Aprobado</span>
     <span th:case="'REJECTED'" class="badge rounded-pill text-bg-danger">Rechazado</span>
+</span>
+
+<!-- Etiqueta de color segun el estado de la reserva (Acta 1, punto 4.8) -->
+<span th:fragment="bookingStatus(status)" th:switch="${status.name()}">
+    <span th:case="'PENDING'" class="badge rounded-pill text-bg-warning">Pendiente de pago</span>
+    <span th:case="'CONFIRMED'" class="badge rounded-pill text-bg-success">Confirmada</span>
+    <span th:case="'CANCELLED'" class="badge rounded-pill text-bg-secondary">Cancelada</span>
+    <span th:case="'COMPLETED'" class="badge rounded-pill text-bg-primary">Realizada</span>
+</span>
+
+<!-- Estrellas de 1 a 5 -->
+<span th:fragment="stars(score)" class="stars">
+    <i th:each="n : ${#numbers.sequence(1, 5)}" th:class="${n <= score} ? 'bi bi-star-fill' : 'bi bi-star'"></i>
 </span>
 
 <footer th:fragment="footer" class="footer-um mt-5">

@@ -322,3 +322,100 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **Fragmentos reutilizables (`fragments/cards.html`):**
   - la tarjeta de actividad se escribe una vez y se usa en la portada y en el buscador;
   - la portada de color de cada actividad depende de su tipo, a través de un atributo `data-type` que lee el CSS.
+
+## 2.11 Reservas ⭐
+
+**Archivos:** `entities/Booking`, `BookingStatus`, `CancelledBy`, `services/BookingService` y `controllers/TouristController`.
+
+**Recorrido del turista:**
+
+```
+Detalle de la actividad → elige fecha → /tourist/book/{fecha}
+  → si no inició sesión, Spring Security lo manda al login y después lo trae de vuelta
+  → elige cantidad de personas y observaciones → se crea la reserva PENDIENTE
+  → /tourist/bookings/{id}/pay → paga → CONFIRMADA → ve su QR
+```
+
+**Reglas que controla `createBooking`** (cada una sale de la letra o del acta):
+
+| Regla | De dónde sale |
+|---|---|
+| La fecha está programada (no cancelada) y la actividad es visible | Letra |
+| Todavía no pasó el cierre de reservas (`bookingLimitMinutes`) | Letra: "hasta cuánto tiempo está permitido realizar la reserva" |
+| Al menos 1 persona | Lógica |
+| El turista tiene la edad mínima de la actividad (se calcula con su fecha de nacimiento) | Acta 1, punto 4.1 |
+| Si la fecha tiene cupo, alcanzan los lugares | Acta 1, punto 4.3 (cupo opcional) |
+| Total = precio × personas, calculado en el servidor (no se confía en lo que manda el navegador) | Seguridad |
+| La reserva queda PENDIENTE y vence en 2 horas | Acta 1, punto 4.8 |
+
+- **Lugares ocupados (`getTakenPlaces`):** cuentan las reservas confirmadas, las realizadas y las pendientes que todavía no vencieron. Por eso una reserva pendiente "retiene el lugar", como dice el acta.
+- **Número de reserva:** `UM-` seguido de 6 caracteres al azar (`SecureRandom`). No usa letras que se confunden (O/0, I/1) y se verifica que no esté repetido.
+- **Estados** (Acta 1, punto 4.8): `PENDING` → `CONFIRMED` → `COMPLETED`, o `CANCELLED` en cualquier momento antes. `cancelledBy` guarda quién canceló: el turista, el prestador o el sistema.
+
+**Vencimiento automático** ⭐:
+- `cancelExpiredBookings()` tiene `@Scheduled(fixedRate = 60000)`, así que Spring la ejecuta sola cada minuto.
+- Cancela las reservas pendientes que pasaron las 2 horas sin pagar y así libera los lugares.
+- Para que funcione, la clase principal tiene `@EnableScheduling`.
+
+**Cancelaciones:**
+- **El turista** (`cancelByTourist`) puede cancelar si la actividad lo permite y si falta más tiempo que la anticipación mínima (Acta 1, punto 4.5). Una pendiente siempre la puede cancelar.
+- **El prestador** (`cancelInstance`) cancela una fecha entera, y se cancelan todas sus reservas activas (Acta 1, punto 4.6).
+- **Pendiente con el cliente:** el acta deja sin definir los motivos de cancelación y el porcentaje de devolución de cada uno. Por eso no se implementó el reembolso.
+
+## 2.12 Pagos: integración con un servicio externo ⭐⭐
+
+**Archivos:** `services/PaymentGatewayClient`, `simulator/FakePaymentGatewayController`, `entities/Payment` y `services/BookingService.payBooking`.
+
+Es el punto de la letra sobre integración con un sistema externo, y uno de los más probables de que pregunten.
+
+**Cómo está armado:**
+
+```
+BookingService.payBooking
+   → PaymentGatewayClient.charge(...)        (nuestro código)
+      → POST http://.../api/v1/charges       (HTTP de verdad, con RestClient)
+         → servicio de pagos externo         (para la demo, el simulador)
+```
+
+- **`PaymentGatewayClient`** es lo único que sabe hablar con el servicio de pagos. Si mañana se usa Mercado Pago, se cambia esta clase y el resto queda igual.
+- **La dirección del servicio** se configura en `application.properties` (`payment.gateway.url`), no está escrita en el código.
+- **El simulador** (`FakePaymentGatewayController`) hace de "otra empresa". Responde según la tarjeta: aprobado (200), rechazado (402) o caído (503). Ver las tarjetas de prueba en el README.
+
+**Los tres resultados posibles** (la letra pide manejarlos "de manera coherente"):
+
+| Qué pasa | Qué hace el sistema |
+|---|---|
+| **Aprobado** | El pago queda `APPROVED` y la reserva pasa a `CONFIRMED`. |
+| **Rechazado** (por ejemplo, sin fondos) | El pago queda `REJECTED`. La reserva **sigue pendiente**, y el turista puede probar otra tarjeta dentro de las 2 horas. |
+| **El servicio no responde** (error 5xx, se cae la conexión o pasan más de 5 segundos) | El pago queda `ERROR`. La reserva **sigue pendiente** y se le pide al turista que reintente. **Nunca se confirma una reserva sin pago aprobado** (Acta 1, punto 4.7). |
+
+**Detalles que conviene saber explicar:**
+- **Timeout de 5 segundos:** si el servicio externo se cuelga, el turista no se queda esperando para siempre.
+- **Cada intento de pago queda guardado**, salga bien o mal. Sirve para auditoría y para mostrarle al turista qué pasó.
+- **De la tarjeta solo se guardan la marca y los últimos 4 números**, nunca el número completo ni el CVV.
+- **`@Transactional(noRollbackFor = ...)`:** si el pago falla, se lanza una excepción, pero el registro del intento fallido se guarda igual.
+
+## 2.13 Código QR y asistencia
+
+**Archivos:** `services/QrCodeService`, `TouristController.qrCode` y `ProviderWebController.checkIn`.
+
+- **Sale del Acta 1, punto 4.10:** confirmada la reserva, se genera un QR con el número de reserva. El día de la actividad, el prestador lo escanea y la reserva pasa a REALIZADA.
+- **`QrCodeService`** arma la imagen PNG con la librería **ZXing**.
+- **`/tourist/bookings/{id}/qr.png`** devuelve esa imagen. `@ResponseBody` hace que el controller devuelva los bytes de la imagen en lugar del nombre de una página.
+- **El prestador** escribe (o escanea) el número en "Reservas → Registrar asistencia". `checkIn` controla cuatro cosas:
+  - que la reserva sea de una actividad suya;
+  - que esté confirmada (pagada);
+  - que sea el día de la actividad;
+  - que no se haya registrado antes.
+- **El mail de confirmación** se muestra como mensaje en pantalla. Mandar mails de verdad necesita un servidor de correo y queda como mejora.
+
+## 2.14 Valoraciones
+
+**Archivos:** `entities/Rating` y `services/RatingService`.
+
+- **Se puede valorar si se cumplen tres cosas:**
+  - la reserva se pagó;
+  - la fecha de la actividad ya pasó;
+  - todavía no la valoró (Acta 1, punto 4.9).
+- **Una valoración por reserva:** `@OneToOne` con `unique = true`.
+- **Son públicas:** el detalle de la actividad muestra el promedio con estrellas y los comentarios, como pide la letra.

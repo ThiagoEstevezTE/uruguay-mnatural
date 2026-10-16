@@ -63,6 +63,12 @@
                             <span class="text-muted small" th:text="${instance.maxCapacity} ? ${' · cupo ' + instance.maxCapacity} : ' · sin cupo'"></span>
                         </div>
                         <span th:if="${instance.status.name() == 'CANCELLED'}" class="badge text-bg-secondary">Cancelada</span>
+                        <form th:if="${instance.status.name() == 'SCHEDULED' and instance.future}"
+                              method="post" th:action="@{/provider/instances/{id}/cancel(id=${instance.id})}"
+                              onsubmit="return confirm('Se van a cancelar también las reservas de esta fecha. ¿Seguir?');">
+                            <input type="hidden" name="activityId" th:value="${activity.id}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar fecha</button>
+                        </form>
                     </li>
                 </ul>
             </div>
