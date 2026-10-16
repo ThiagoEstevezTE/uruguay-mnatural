@@ -97,7 +97,13 @@ public class BookingService {
                         : "Solo quedan " + available + " lugares para esta fecha");
         }
 
+        // Vence a las 2 horas, o antes si cierran las reservas de esa fecha:
+        // asi no se puede pagar una actividad que ya cerro o que ya empezo
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiresAt = now.plusHours(PAYMENT_DEADLINE_HOURS);
+        if (instance.getBookingDeadline().isBefore(expiresAt))
+            expiresAt = instance.getBookingDeadline();
+
         Booking booking = Booking.builder()
                 .instance(instance)
                 .tourist(tourist)
@@ -106,7 +112,7 @@ public class BookingService {
                 .observations(observations == null || observations.isBlank() ? null : observations.trim())
                 .totalAmount(activity.getPrice().multiply(BigDecimal.valueOf(participants)))
                 .createdAt(now)
-                .expiresAt(now.plusHours(PAYMENT_DEADLINE_HOURS))
+                .expiresAt(expiresAt)
                 .build();
 
         return bookingRepo.save(booking);
@@ -143,7 +149,7 @@ public class BookingService {
 
         if (!LocalDateTime.now().isBefore(booking.getExpiresAt())) {
             cancel(booking, CancelledBy.SYSTEM);
-            throw new InvalidDataException("Pasaron las 2 horas para pagar y la reserva se canceló");
+            throw new InvalidDataException("Venció el plazo para pagar y la reserva se canceló");
         }
 
         String card = cardNumber == null ? "" : cardNumber.replace(" ", "");
@@ -267,7 +273,7 @@ public class BookingService {
         return cancelled;
     }
 
-    // Cada minuto se cancelan las reservas pendientes que pasaron las 2 horas sin pagar,
+    // Cada minuto se cancelan las reservas pendientes que vencieron sin pagar,
     // y asi se liberan sus lugares (Acta 1, punto 4.8)
     @Scheduled(fixedRate = 60000)
     @Transactional

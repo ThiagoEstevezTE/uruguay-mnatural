@@ -125,7 +125,7 @@ Tocá cualquier actividad de la lista. Vas a ver:
 
 Antes de seguir, tené en cuenta:
 
-- **Tu lugar queda guardado 2 horas** mientras hacés el pago. Si pasan las 2 horas sin pagar, la reserva se cancela sola.
+- **Tu lugar queda guardado 2 horas** mientras hacés el pago. Si pasan las 2 horas sin pagar, la reserva se cancela sola. Si la actividad cierra sus reservas antes de esas 2 horas, el plazo para pagar termina en ese momento.
 - **La reserva se confirma cuando el pago está aprobado.**
 - Si la actividad tiene edad mínima y no la cumplís, el sistema no te deja reservar y te lo explica.
 - Si la fecha tiene cupo y no quedan lugares, o quedan menos de los que pediste, el sistema te avisa cuántos quedan.

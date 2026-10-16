@@ -52,7 +52,7 @@ public class Booking {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    // Hasta cuando se puede pagar (2 horas despues de crearla)
+    // Hasta cuando se puede pagar: 2 horas despues de crearla, o el cierre de reservas si es antes
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 

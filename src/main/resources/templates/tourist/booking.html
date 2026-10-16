@@ -46,7 +46,7 @@
                     <span th:switch="${booking.cancelledBy?.name()}">
                         <span th:case="'TOURIST'">Cancelaste esta reserva</span>
                         <span th:case="'PROVIDER'">El prestador canceló esta fecha</span>
-                        <span th:case="*">Se canceló porque pasaron 2 horas sin pagar</span>
+                        <span th:case="*">Se canceló porque venció el plazo para pagar</span>
                     </span>
                     el <span th:text="${#temporals.format(booking.cancellationDate, 'dd/MM/yyyy HH:mm')}"></span>.
                 </p>

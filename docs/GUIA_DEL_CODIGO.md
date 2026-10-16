@@ -352,7 +352,7 @@ Detalle de la actividad → elige fecha → /tourist/book/{fecha}
 | El turista tiene la edad mínima de la actividad (se calcula con su fecha de nacimiento) | Acta 1, punto 4.1 |
 | Si la fecha tiene cupo, alcanzan los lugares | Acta 1, punto 4.3 (cupo opcional) |
 | Total = precio × personas, calculado en el servidor (no se confía en lo que manda el navegador) | Seguridad |
-| La reserva queda PENDIENTE y vence en 2 horas | Acta 1, punto 4.8 |
+| La reserva queda PENDIENTE y vence en 2 horas, o al cierre de reservas de esa fecha si es antes | Acta 1, punto 4.8 |
 
 - **Lugares ocupados (`getTakenPlaces`):** cuentan las reservas confirmadas, las realizadas y las pendientes que todavía no vencieron. Por eso una reserva pendiente "retiene el lugar", como dice el acta.
 - **Número de reserva:** `UM-` seguido de 6 caracteres al azar (`SecureRandom`). No usa letras que se confunden (O/0, I/1) y se verifica que no esté repetido.
@@ -360,7 +360,8 @@ Detalle de la actividad → elige fecha → /tourist/book/{fecha}
 
 **Vencimiento automático** ⭐:
 - `cancelExpiredBookings()` tiene `@Scheduled(fixedRate = 60000)`, así que Spring la ejecuta sola cada minuto.
-- Cancela las reservas pendientes que pasaron las 2 horas sin pagar y así libera los lugares.
+- Cancela las reservas pendientes que vencieron sin pagar y así libera los lugares.
+- **El plazo nunca pasa el cierre de reservas:** si la fecha cierra antes de las 2 horas, la reserva vence ahí. Si no, se podría pagar una actividad que ya empezó (prueba `bookingExpiresWhenBookingsCloseIfThatIsBefore2Hours`).
 - Para que funcione, la clase principal tiene `@EnableScheduling`.
 
 **Cancelaciones:**

@@ -115,6 +115,16 @@ class BookingServiceTest {
         assertThrows(InvalidDataException.class, () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null));
     }
 
+    @Test
+    void bookingExpiresWhenBookingsCloseIfThatIsBefore2Hours() throws Exception {
+        // Empieza en 2 h 30 min y cierra las reservas 2 horas antes: hay 30 minutos para pagar, no 2 horas
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusMinutes(150), null);
+
+        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, 1, null);
+
+        assertEquals(instance.getBookingDeadline(), booking.getExpiresAt());
+    }
+
     // ---------- Pagar ----------
 
     @Test
