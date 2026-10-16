@@ -231,6 +231,13 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **Contraste (rama `prueba-taste`):** el naranja de los botones es `#b0501c`, porque con letra blanca da 5.2:1 y el mínimo para leer cómodo (WCAG AA) es 4.5:1. El naranja anterior daba 3.2:1. Bootstrap 5.3 pinta los links con `--bs-link-color-rgb`, así que esa variable también va con el verde (antes los links salían azules).
 - **Sin sombras ni degradés en lo que está quieto:** las tarjetas se separan del fondo por el color (blancas sobre gris verdoso). La sombra queda solo al pasar el mouse por una tarjeta.
 - **Párrafos con `.measure`:** como máximo 65 letras por línea, que es lo cómodo para leer.
+- **Paneles del prestador y del administrador (rama `prueba-taste`):**
+  - Las tablas (`.table-um`) van blancas con el encabezado verde claro. Bootstrap pinta cada celda con el color del fondo de la página, por eso se cambia `--bs-table-bg`.
+  - En el celular las tablas no parten las palabras en renglones: se corren de costado (`white-space: nowrap`). Las observaciones de las reservas sí ocupan varios renglones.
+  - Casillas e interruptores con borde que se ve sobre blanco y verde al marcarlos; el foco de los botones, también verde (antes eran el azul de Bootstrap).
+  - Las etiquetas de estado (Publicada, Confirmada…) van a 13px, como las de los tipos.
+  - En el formulario de actividad, los títulos de cada bloque son iguales a los de las otras tarjetas (`h5`), no letras chicas en mayúscula.
+  - Los botones de guardar y eliminar del catálogo son solo un ícono: llevan `aria-label` para los lectores de pantalla (lo controla `catalogIconButtonsHaveNames`).
 
 ## 2.7 Registro de turistas y prestadores (formularios)
 

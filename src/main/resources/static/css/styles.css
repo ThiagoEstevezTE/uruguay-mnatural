@@ -39,6 +39,8 @@ main {
     --bs-btn-hover-bg: var(--um-green-dark);
     --bs-btn-hover-border-color: var(--um-green-dark);
     --bs-btn-active-bg: var(--um-green-dark);
+    --bs-btn-active-border-color: var(--um-green-dark);
+    --bs-btn-focus-shadow-rgb: 36, 88, 74;
 }
 
 .btn-outline-primary {
@@ -46,6 +48,9 @@ main {
     --bs-btn-border-color: var(--um-green);
     --bs-btn-hover-bg: var(--um-green);
     --bs-btn-hover-border-color: var(--um-green);
+    --bs-btn-active-bg: var(--um-green-dark);
+    --bs-btn-active-border-color: var(--um-green-dark);
+    --bs-btn-focus-shadow-rgb: 36, 88, 74;
 }
 
 .btn-accent {
@@ -179,7 +184,7 @@ main {
 /* Paneles de prestador y administrador */
 .panel-header {
     background: #fff;
-    border-bottom: 1px solid #e6e1d6;
+    border-bottom: 1px solid #dfe6e2;
     padding: 1.5rem 0;
     margin-bottom: 1.5rem;
 }
@@ -196,8 +201,32 @@ main {
     overflow: hidden;
 }
 
-.table-um thead {
-    background: #eef3ef;
+/* Bootstrap pinta cada celda con el color del fondo de la pagina: aca van blancas, y el encabezado verde claro */
+.table-um > .table {
+    --bs-table-bg: #fff;
+}
+
+.table-um > .table > thead {
+    --bs-table-bg: #eef3ef;
+}
+
+/* En el celular la tabla no parte las palabras en renglones: se corre de costado.
+   Las observaciones (texto largo, clase small) si pueden ocupar varios renglones. */
+@media (max-width: 767.98px) {
+    .table-um > .table th,
+    .table-um > .table td {
+        white-space: nowrap;
+    }
+
+    .table-um > .table td.small:not(.font-monospace) {
+        white-space: normal;
+        min-width: 12rem;
+    }
+}
+
+/* Las etiquetas de estado (Publicada, Confirmada...) a 13px, como las de los tipos */
+.badge.rounded-pill {
+    font-size: .8125rem;
 }
 
 /* Pie de pagina */
@@ -214,9 +243,24 @@ main {
 }
 
 .form-control:focus,
-.form-select:focus {
+.form-select:focus,
+.form-check-input:focus {
     border-color: #6fa28c;
     box-shadow: 0 0 0 .2rem rgba(36, 88, 74, .18);
+}
+
+/* Casillas e interruptores: borde que se ve sobre blanco y verde de la marca al marcarlos (no el azul de Bootstrap) */
+.form-check-input {
+    border-color: #8a9993;
+}
+
+.form-check-input:checked {
+    background-color: var(--um-green);
+    border-color: var(--um-green);
+}
+
+.form-switch .form-check-input:focus:not(:checked) {
+    --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%236fa28c'/%3e%3c/svg%3e");
 }
 
 .page-link {

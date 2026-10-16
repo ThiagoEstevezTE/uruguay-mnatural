@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import uy.edu.um.proyectotic2026.repository.ActivityRepository;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,5 +72,14 @@ class ProviderAndAdminPagesTest {
     void adminCatalogPagesRender() throws Exception {
         mvc.perform(get("/admin/activity-types")).andExpect(status().isOk());
         mvc.perform(get("/admin/equipment")).andExpect(status().isOk());
+    }
+
+    // Los botones de guardar y eliminar del catalogo son solo un icono: llevan nombre para los lectores de pantalla
+    @Test
+    @WithMockUser(username = "admin@uymnatural.uy", roles = "ADMIN")
+    void catalogIconButtonsHaveNames() throws Exception {
+        mvc.perform(get("/admin/equipment"))
+                .andExpect(content().string(containsString("aria-label=\"Guardar\"")))
+                .andExpect(content().string(containsString("aria-label=\"Eliminar\"")));
     }
 }
