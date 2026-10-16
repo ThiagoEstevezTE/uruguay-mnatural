@@ -406,6 +406,7 @@ BookingService.payBooking
   - Si el turista hace doble clic en "Pagar", el segundo pedido espera a que termine el primero.
   - Cuando sigue, la reserva ya está confirmada y responde "no está pendiente de pago".
   - El vencimiento automático también bloquea, así que no cancela una reserva mientras se está pagando.
+  - **El bloqueo dura lo que tarda el cobro** (como mucho 5 segundos para conectar y 5 para responder). Es a propósito: solo espera quien toca esa misma reserva (el doble clic o el vencimiento automático), y el resto de la app sigue andando. Para no bloquear habría que cobrar fuera de la transacción con un estado intermedio "procesando", que es bastante más código y abre otro problema: qué hacer si la app se cae en la mitad del cobro.
   - Lo prueba `BookingConcurrencyTest`, que lanza los dos pagos a la vez en dos hilos.
 
 ## 2.13 Código QR y asistencia
@@ -516,6 +517,7 @@ src/main/resources/
 - **¿Cómo evitan que un prestador edite la actividad de otro?** El service siempre controla que lo que se pide sea del usuario logueado (`getActivityOfProvider`, y en reservas `checkOwner`, que usan tanto `getBookingOfTourist` como `payBooking`). Si no es suyo, responde "no encontrado".
 - **¿Qué pasa si el servicio de pagos se cae?** La reserva queda pendiente, el intento se guarda con estado ERROR y se le pide al turista que reintente. Nunca se confirma sin pago aprobado (ver 2.12).
 - **¿Qué pasa si alguien hace doble clic en "Pagar"?** Se bloquea la reserva mientras se paga (`SELECT ... FOR UPDATE`): el segundo pedido espera y encuentra la reserva ya confirmada. Se cobra una sola vez (ver 2.12).
+- **¿No es malo dejar la reserva bloqueada mientras se llama al servicio de pagos?** Solo frena a quien quiere tocar esa misma reserva, y como mucho 10 segundos por el timeout. Cobrar sin bloquear pediría un estado "procesando" y manejar qué pasa si la app se cae a mitad del cobro: más complejo para un caso que casi no ocurre (ver 2.12).
 - **¿Cómo se cancelan solas las reservas vencidas?** Con `@Scheduled`: un método que Spring ejecuta cada minuto (ver 2.11).
 - **¿Qué pasa si dos turistas reservan el último lugar a la vez?** Se bloquea la fecha mientras se cuenta el cupo: uno reserva y el otro recibe "No quedan lugares" (ver 2.11).
 - **¿Cómo manejan el cupo si el acta dice que no hay?** Es opcional por fecha. Si el prestador no lo pone, no hay límite. Quedó así porque el acta dice que se va a volver a consultar.
