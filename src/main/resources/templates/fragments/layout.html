@@ -92,7 +92,10 @@
 <footer th:fragment="footer" class="footer-um mt-5">
     <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 py-4">
         <span><i class="bi bi-compass"></i> Uruguay Mnatural · Turismo en todo el país</span>
-        <span class="small">Desarrollado por TeroBytes · Proyecto TIC 2026</span>
+        <span class="small">
+            Desarrollado por TeroBytes · Proyecto TIC 2026 ·
+            <a class="link-light" th:href="@{/credits}">Créditos de las fotos</a>
+        </span>
     </div>
     <script th:src="@{/webjars/bootstrap/dist/js/bootstrap.bundle.min.js}"></script>
 </footer>

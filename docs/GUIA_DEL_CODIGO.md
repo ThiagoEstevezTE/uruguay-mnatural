@@ -227,7 +227,10 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 
 - **`layout.html`** tiene las partes comunes: el `<head>`, el menú, los mensajes y el pie. Cada página las incluye con `th:replace`, así no se repite el mismo HTML en todas.
 - **El menú cambia según quién entró** (`sec:authorize`): un visitante ve "Ingresar" y "Crear cuenta", y cada rol ve el link a su espacio.
-- **`styles.css`** cambia los colores de Bootstrap por los de la marca: verde monte, arena y un acento terracota.
+- **`styles.css`** cambia los colores de Bootstrap por los de la marca: verde monte, un fondo gris verdoso claro y un acento naranja.
+- **Contraste (rama `prueba-taste`):** el naranja de los botones es `#b0501c`, porque con letra blanca da 5.2:1 y el mínimo para leer cómodo (WCAG AA) es 4.5:1. El naranja anterior daba 3.2:1. Bootstrap 5.3 pinta los links con `--bs-link-color-rgb`, así que esa variable también va con el verde (antes los links salían azules).
+- **Sin sombras ni degradés en lo que está quieto:** las tarjetas se separan del fondo por el color (blancas sobre gris verdoso). La sombra queda solo al pasar el mouse por una tarjeta.
+- **Párrafos con `.measure`:** como máximo 65 letras por línea, que es lo cómodo para leer.
 
 ## 2.7 Registro de turistas y prestadores (formularios)
 
@@ -327,7 +330,9 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **`@ExceptionHandler`:** en lugar de repetir `try/catch` en cada método, un método del controller atrapa todas las `EntityNotFoundException` y muestra la página de error con código 404.
 - **Fragmentos reutilizables (`fragments/cards.html`):**
   - la tarjeta de actividad se escribe una vez y se usa en la portada y en el buscador;
-  - la portada de color de cada actividad depende de su tipo, a través de un atributo `data-type` que lee el CSS.
+  - la portada de cada actividad muestra la foto de su lugar (`static/img/lugares`) con un `th:switch` sobre el nombre de la localidad. Si el lugar no tiene foto, queda la portada de color según su tipo, con el atributo `data-type` que lee el CSS;
+  - las fotos son de Wikimedia Commons con licencia libre (CC BY-SA): se pueden usar nombrando al autor y la licencia, y eso está en `/credits` (`credits.html`, con un link en el pie). Muestran el lugar, no al prestador ni su actividad;
+  - **Si preguntan por qué no es un campo de la base:** las fotos de cada actividad son IMAGEN_ACTIVIDAD del MER y todavía no están (ver 3.4). Mientras tanto, la foto del lugar es fija y no cambia la base.
 
 ## 2.11 Reservas ⭐
 
@@ -536,6 +541,6 @@ src/main/resources/
 |---|---|
 | **Reembolsos** (REEMBOLSO y MOTIVO_CANCELACION del MER) | El Acta 1 (punto 4.6) dice que los motivos y porcentajes "quedan pendientes de definir con el cliente". Hay que preguntarlos en la próxima reunión. |
 | **Guardar el medio de pago del turista** (MEDIO_PAGO) | Está acordado en el acta (4.1), pero no es necesario para reservar. Es la próxima mejora. |
-| **Imágenes de las actividades** (IMAGEN_ACTIVIDAD) | Por ahora cada actividad muestra una portada de color según su tipo. Falta poder subir fotos. |
+| **Imágenes de las actividades** (IMAGEN_ACTIVIDAD) | Por ahora cada actividad muestra una foto de su lugar (fija, de Wikimedia Commons) o, si el lugar no tiene, una portada de color según su tipo. Falta que el prestador pueda subir las fotos de su actividad. |
 | **Mail de confirmación** | Se muestra en pantalla. Mandarlo de verdad necesita un servidor de correo (por ejemplo `spring-boot-starter-mail`). |
 | **Escanear el QR con la cámara** | El QR se genera. El prestador escribe el código; leerlo con la cámara del celular sería una mejora. |

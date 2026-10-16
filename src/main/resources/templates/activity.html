@@ -9,12 +9,9 @@
 
     <div class="row g-4 mt-1">
         <div class="col-lg-8">
-            <div th:replace="~{fragments/cards :: cover(${activity}, '260px')}"></div>
+            <div th:replace="~{fragments/cards :: cover(${activity}, '380px')}"></div>
 
-            <div class="mt-3">
-                <span class="badge badge-type me-1" th:each="typeName : ${activity.typeNames}" th:text="${typeName}"></span>
-            </div>
-            <h1 class="h2 section-title mt-2 mb-1" th:text="${activity.name}"></h1>
+            <h1 class="h2 section-title mt-3 mb-2" th:text="${activity.name}"></h1>
             <p class="mb-1" th:if="${average}">
                 <span th:replace="~{fragments/layout :: stars(${averageStars})}"></span>
                 <strong th:text="${average}"></strong>
@@ -25,10 +22,16 @@
                 <span th:text="${activity.locality.name + ', ' + activity.locality.department.name}"></span>
                 · Organiza <strong th:text="${activity.business.name}"></strong>
             </p>
+            <!-- Tipos de la actividad, debajo del titulo -->
+            <p class="mb-3">
+                <span class="badge badge-type me-1" th:each="typeName : ${activity.typeNames}" th:text="${typeName}"></span>
+            </p>
+            <!-- En el celular la columna de reserva queda abajo de todo: este boton lleva directo a las fechas -->
+            <a href="#fechas" class="btn btn-accent mb-4 d-lg-none">Ver fechas y reservar</a>
 
             <div class="card card-um p-4 mb-4">
                 <h2 class="h5">La experiencia</h2>
-                <p class="mb-0" style="white-space: pre-line" th:text="${activity.description}"></p>
+                <p class="mb-0 measure" style="white-space: pre-line" th:text="${activity.description}"></p>
             </div>
 
             <div class="row g-4 mb-4">
@@ -72,7 +75,7 @@
             <div class="card card-um p-4 mb-4">
                 <h2 class="h5">Opiniones de otros turistas</h2>
                 <p class="text-muted small mb-0" th:if="${ratings.isEmpty()}">Todavía no hay valoraciones.</p>
-                <div class="border-top pt-3 mt-2" th:each="rating : ${ratings}">
+                <div class="rating-item" th:each="rating : ${ratings}">
                     <div class="d-flex justify-content-between">
                         <strong th:text="${rating.booking.tourist.firstName}"></strong>
                         <span class="small text-muted" th:text="${#temporals.format(rating.date, 'dd/MM/yyyy')}"></span>
@@ -85,7 +88,7 @@
 
         <!-- Columna de reserva -->
         <div class="col-lg-4">
-            <div class="card card-um p-4 sticky-lg-top" style="top: 80px">
+            <div id="fechas" class="card card-um p-4 sticky-lg-top" style="top: 80px">
                 <p class="mb-0 text-muted small">Precio por persona</p>
                 <p class="price fs-3 mb-3" th:text="${'$ ' + #numbers.formatDecimal(activity.price, 1, 'POINT', 0, 'COMMA')}"></p>
 

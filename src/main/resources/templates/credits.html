@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Créditos de las fotos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<!-- Las fotos son de Wikimedia Commons con licencia libre: hay que nombrar al autor y la licencia.
+     Muestran el lugar, no a los prestadores ni sus actividades. -->
+<main class="container py-5">
+    <h1 class="h3 section-title mb-2">Créditos de las fotos</h1>
+    <p class="text-muted measure mb-4">
+        Las fotos de los lugares son de Wikimedia Commons, con licencias que permiten usarlas nombrando al autor.
+        Muestran cada lugar, no a los prestadores ni a sus actividades.
+    </p>
+
+    <ul class="list-unstyled measure">
+        <li class="mb-3">
+            <strong>Laguna de Rocha</strong> (portada) ·
+            <a href="https://commons.wikimedia.org/w/index.php?curid=142981333">"Drone Laguna de rocha"</a>
+            por Alejandrobarrios1987,
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
+        </li>
+        <li class="mb-3">
+            <strong>Cabo Polonio</strong> ·
+            <a href="https://commons.wikimedia.org/wiki/File:Oc%C3%A1no_y_dunas(Cabo_Polonio).jpg">"Océano y dunas (Cabo Polonio)"</a>
+            por Jorgestenopeico,
+            <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+        </li>
+        <li class="mb-3">
+            <strong>Villa Serrana</strong> ·
+            <a href="https://commons.wikimedia.org/wiki/File:Villa_Serrana_(35702102865).jpg">"Villa Serrana"</a>
+            por Marcelo Campi,
+            <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA 2.0</a>
+        </li>
+        <li class="mb-3">
+            <strong>Colonia del Sacramento</strong> ·
+            <a href="https://commons.wikimedia.org/wiki/File:Calle_De_Los_Suspiros,_Colonia_del_Sacramento.jpg">"Calle De Los Suspiros, Colonia del Sacramento"</a>
+            por Banfield,
+            <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>
+        </li>
+        <li class="mb-3">
+            <strong>Punta del Este</strong> ·
+            <a href="https://commons.wikimedia.org/wiki/File:Isla_Gorriti_17.jpg">"Isla Gorriti 17"</a>
+            por Pipe310593,
+            <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>
+        </li>
+    </ul>
+    <p class="small text-muted measure">Las fotos se achicaron para que la página cargue más rápido; no se les cambió nada más.</p>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
