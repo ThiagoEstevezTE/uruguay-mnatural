@@ -6,14 +6,74 @@
 
 <section class="hero">
     <div class="container">
-        <h1>Descubrí Uruguay, actividad por actividad</h1>
-        <p class="lead mb-0">Cabalgatas, trekking, gastronomía, turismo náutico y mucho más, en todo el país.</p>
+        <h1 class="mb-2">Descubrí Uruguay, actividad por actividad</h1>
+        <p class="lead mb-4">Cabalgatas, trekking, gastronomía, kayak y mucho más, en todo el país.</p>
+
+        <!-- Buscador: manda los filtros a /activities -->
+        <form th:action="@{/activities}" method="get" class="search-box">
+            <div class="row g-2 align-items-end">
+                <div class="col-lg-4">
+                    <label class="form-label small text-muted mb-1" for="keyword">¿Qué querés hacer?</label>
+                    <input type="text" id="keyword" name="keyword" class="form-control" placeholder="Ej.: kayak, vinos, faro">
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small text-muted mb-1" for="departmentId">Destino</label>
+                    <select id="departmentId" name="departmentId" class="form-select">
+                        <option value="">Todo el país</option>
+                        <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small text-muted mb-1" for="typeId">Tipo</label>
+                    <select id="typeId" name="typeId" class="form-select">
+                        <option value="">Todos</option>
+                        <option th:each="t : ${types}" th:value="${t.id}" th:text="${t.name}"></option>
+                    </select>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <label class="form-label small text-muted mb-1" for="date">Fecha</label>
+                    <input type="date" id="date" name="date" class="form-control">
+                </div>
+                <div class="col-6 col-lg-2">
+                    <button type="submit" class="btn btn-accent w-100"><i class="bi bi-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
     </div>
 </section>
 
-<main class="container py-4">
+<main class="container py-5">
     <div th:replace="~{fragments/layout :: messages}"></div>
     <div th:if="${param.logout}" class="alert alert-success">Cerraste sesión.</div>
+
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <h2 class="section-title h4 mb-0">Próximas actividades</h2>
+            <p class="text-muted mb-0">Las que tienen fechas más cerca.</p>
+        </div>
+        <a th:href="@{/activities}">Ver todas <i class="bi bi-arrow-right"></i></a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-sm-6 col-lg-4" th:each="activity : ${featured}">
+            <div th:replace="~{fragments/cards :: activityCard(${activity})}"></div>
+        </div>
+    </div>
+
+    <section class="card card-um p-4 p-md-5 mt-5">
+        <div class="row align-items-center g-4">
+            <div class="col-md-8">
+                <h2 class="h4 section-title">¿Ofrecés experiencias turísticas?</h2>
+                <p class="text-muted mb-0">
+                    Registrá tu emprendimiento, ya seas empresa o particular. Cuando Uruguay Mnatural lo apruebe,
+                    vas a poder publicar tus actividades y recibir reservas de turistas de todo el mundo.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a class="btn btn-primary btn-lg" th:href="@{/register/provider}">Registrar emprendimiento</a>
+            </div>
+        </div>
+    </section>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

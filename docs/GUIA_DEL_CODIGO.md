@@ -300,3 +300,25 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - 9 tipos de actividad y 10 equipamientos;
 - 4 emprendimientos aprobados en Rocha, Lavalleja, Colonia y Maldonado, y 1 pendiente;
 - 7 actividades con fechas en los próximos días. Las fechas se calculan desde el día en que arranca la app, así la demo siempre tiene fechas futuras.
+
+## 2.10 Portal público y buscador
+
+**Archivos:** `services/PortalService`, `controllers/IndexController`, `dto/ActivitySearchDTO`, `templates/index.html`, `activities.html`, `activity.html` y `fragments/cards.html`.
+
+- **Es todo público** ⭐. La letra dice que el visitante explora "sin necesidad de registrarse". En `SecurityConfig` estas URLs no están protegidas.
+- **Qué actividades se ven:** las que cumplen las tres condiciones:
+  - están publicadas;
+  - su emprendimiento está **aprobado**;
+  - tienen al menos una fecha en la que todavía se puede reservar.
+- **`Activity.getUpcomingInstances()`:** devuelve las fechas programadas (no canceladas) cuyo cierre de reservas todavía no pasó. Lo usan el portal, las tarjetas y el detalle.
+- **Buscador (`searchActivities`)** ⭐:
+  - Los filtros de la letra son destino, tipo, fecha, precio y palabra clave.
+  - Todos son opcionales: cada `filter(...)` del stream deja pasar todo si ese filtro está vacío.
+  - Los filtros viajan en la URL (`/activities?departmentId=14&typeId=3`). Así se puede compartir el link de una búsqueda o volver atrás con el navegador.
+  - **Si preguntan por qué se filtra en Java y no en SQL:** con pocos datos es más simple de leer y de probar. Si la plataforma creciera mucho, convendría pasar los filtros a una consulta del repositorio con `@Query`.
+- **Portada:** muestra las 6 actividades con la fecha más cercana (`getFeaturedActivities`).
+- **Detalle:** si alguien pone en la URL el número de una actividad oculta o de un emprendimiento no aprobado, responde "no encontrada" (404).
+- **`@ExceptionHandler`:** en lugar de repetir `try/catch` en cada método, un método del controller atrapa todas las `EntityNotFoundException` y muestra la página de error con código 404.
+- **Fragmentos reutilizables (`fragments/cards.html`):**
+  - la tarjeta de actividad se escribe una vez y se usa en la portada y en el buscador;
+  - la portada de color de cada actividad depende de su tipo, a través de un atributo `data-type` que lee el CSS.

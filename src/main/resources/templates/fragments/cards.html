@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Portada de color con un icono segun el tipo principal de la actividad -->
+<div th:fragment="cover(activity, height)" class="activity-cover"
+     th:with="mainType=${activity.typeNames.isEmpty() ? '' : activity.typeNames[0]}"
+     th:attr="data-type=${mainType}"
+     th:style="${height} ? ${'height:' + height}">
+    <th:block th:switch="${mainType}">
+        <i th:case="'Actividad acuática'" class="bi bi-water"></i>
+        <i th:case="'Aventura'" class="bi bi-lightning-charge"></i>
+        <i th:case="'Cabalgata'" class="bi bi-sunset"></i>
+        <i th:case="'Enoturismo'" class="bi bi-cup-straw"></i>
+        <i th:case="'Gastronomía'" class="bi bi-cup-hot"></i>
+        <i th:case="'Recorrido histórico'" class="bi bi-bank"></i>
+        <i th:case="'Senderismo'" class="bi bi-signpost-2"></i>
+        <i th:case="'Trekking'" class="bi bi-signpost-split"></i>
+        <i th:case="'Turismo de naturaleza'" class="bi bi-tree"></i>
+        <i th:case="*" class="bi bi-compass"></i>
+    </th:block>
+</div>
+
+<!-- Tarjeta de actividad para la portada y el buscador -->
+<div th:fragment="activityCard(activity)" class="card card-um activity-card">
+    <a th:href="@{/activities/{id}(id=${activity.id})}" class="text-decoration-none">
+        <div th:replace="~{fragments/cards :: cover(${activity}, null)}"></div>
+    </a>
+    <div class="card-body d-flex flex-column">
+        <div class="mb-2">
+            <span class="badge badge-type me-1" th:each="typeName : ${activity.typeNames}" th:text="${typeName}"></span>
+        </div>
+        <h3 class="h6 fw-bold mb-1">
+            <a class="text-reset text-decoration-none stretched-link" th:href="@{/activities/{id}(id=${activity.id})}"
+               th:text="${activity.name}"></a>
+        </h3>
+        <p class="small text-muted mb-2">
+            <i class="bi bi-geo-alt"></i>
+            <span th:text="${activity.locality.name + ', ' + activity.locality.department.name}"></span>
+        </p>
+        <p class="small text-muted mb-3" th:unless="${activity.upcomingInstances.isEmpty()}">
+            <i class="bi bi-calendar-event"></i> Próxima fecha:
+            <span th:text="${#temporals.format(activity.upcomingInstances[0].startDateTime, 'EEE dd/MM · HH:mm')}"></span>
+        </p>
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+            <span class="small text-muted"><i class="bi bi-clock"></i> <span th:text="${activity.durationText}"></span></span>
+            <span class="price" th:text="${'$ ' + #numbers.formatDecimal(activity.price, 1, 'POINT', 0, 'COMMA')}"></span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

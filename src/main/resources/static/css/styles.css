@@ -204,3 +204,35 @@ main {
 .form-select {
     background-color: #fff;
 }
+
+/* Color de la portada segun el tipo principal de la actividad (atributo data-type) */
+.activity-cover[data-type="Actividad acuática"] { background: linear-gradient(135deg, #1f6f8b, #4fa3c4); }
+.activity-cover[data-type="Aventura"] { background: linear-gradient(135deg, #b85f2c, #e39a5a); }
+.activity-cover[data-type="Cabalgata"] { background: linear-gradient(135deg, #8a5a3b, #d49a6a); }
+.activity-cover[data-type="Enoturismo"] { background: linear-gradient(135deg, #6d2943, #a8506f); }
+.activity-cover[data-type="Gastronomía"] { background: linear-gradient(135deg, #a3612a, #d8a25a); }
+.activity-cover[data-type="Recorrido histórico"] { background: linear-gradient(135deg, #4b5563, #8b95a5); }
+.activity-cover[data-type="Senderismo"] { background: linear-gradient(135deg, #2f6b4f, #6aa77f); }
+.activity-cover[data-type="Trekking"] { background: linear-gradient(135deg, #3d5a3a, #7f9f62); }
+
+.search-box .form-control,
+.search-box .form-select {
+    border-color: #e1dccf;
+}
+
+.section-title {
+    font-weight: 800;
+    letter-spacing: -.2px;
+}
+
+.detail-cover {
+    border-radius: 1rem;
+    height: 260px;
+    font-size: 5rem;
+}
+
+.info-list i {
+    color: var(--um-green);
+    width: 1.5rem;
+    display: inline-block;
+}

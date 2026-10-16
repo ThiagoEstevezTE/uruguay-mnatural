@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Actividades')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <h1 class="h3 section-title mb-4">Actividades en Uruguay</h1>
+
+    <div class="row g-4">
+        <!-- Filtros: el formulario se manda por GET, asi los filtros quedan en la URL -->
+        <aside class="col-lg-3">
+            <form th:action="@{/activities}" th:object="${search}" method="get" class="card card-um p-3">
+                <label class="form-label small fw-semibold" for="keyword">Palabra clave</label>
+                <input type="text" th:field="*{keyword}" class="form-control mb-3" placeholder="Ej.: faro">
+
+                <label class="form-label small fw-semibold" for="departmentId">Departamento</label>
+                <select th:field="*{departmentId}" class="form-select mb-3">
+                    <option value="">Todo el país</option>
+                    <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}"></option>
+                </select>
+
+                <label class="form-label small fw-semibold" for="typeId">Tipo de actividad</label>
+                <select th:field="*{typeId}" class="form-select mb-3">
+                    <option value="">Todos</option>
+                    <option th:each="t : ${types}" th:value="${t.id}" th:text="${t.name}"></option>
+                </select>
+
+                <label class="form-label small fw-semibold" for="date">Fecha</label>
+                <input type="date" th:field="*{date}" class="form-control mb-3">
+
+                <label class="form-label small fw-semibold" for="maxPrice">Precio máximo por persona</label>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">$</span>
+                    <input type="number" th:field="*{maxPrice}" class="form-control" min="0" step="100">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Filtrar</button>
+                <a th:href="@{/activities}" class="btn btn-link btn-sm mt-1">Limpiar filtros</a>
+            </form>
+        </aside>
+
+        <section class="col-lg-9">
+            <p class="text-muted" th:text="${#lists.size(activities) == 1} ? '1 actividad encontrada' : ${#lists.size(activities) + ' actividades encontradas'}"></p>
+
+            <div th:if="${activities.isEmpty()}" class="card card-um p-5 text-center text-muted">
+                <i class="bi bi-search fs-1"></i>
+                <p class="mb-0">No hay actividades con esos filtros. Probá con otra fecha o destino.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-sm-6 col-xl-4" th:each="activity : ${activities}">
+                    <div th:replace="~{fragments/cards :: activityCard(${activity})}"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
