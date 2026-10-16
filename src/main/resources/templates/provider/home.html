@@ -3,9 +3,40 @@
 <head th:replace="~{fragments/layout :: head('Mi emprendimiento')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
-<main class="container py-4">
-    <h1 class="h3">Mi emprendimiento</h1>
+
+<header class="panel-header">
+    <div class="container">
+        <h1 class="h3 mb-0">Hola, <span th:text="${provider.name}"></span></h1>
+        <p class="text-muted mb-0">Tu espacio para gestionar emprendimientos, actividades y reservas.</p>
+    </div>
+</header>
+
+<main class="container">
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <div class="card card-um p-4 mb-3" th:each="business : ${businesses}">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h2 class="h5 mb-1" th:text="${business.name}"></h2>
+                <p class="text-muted small mb-0">
+                    <i class="bi bi-geo-alt"></i>
+                    <span th:text="${business.address + ', ' + business.locality.name + ' (' + business.locality.department.name + ')'}"></span>
+                </p>
+            </div>
+            <span th:replace="~{fragments/layout :: businessStatus(${business.status})}"></span>
+        </div>
+
+        <div class="alert alert-warning mt-3 mb-0" th:if="${business.status.name() == 'PENDING'}">
+            <i class="bi bi-hourglass-split"></i>
+            Tu solicitud está en evaluación. Cuando Uruguay Mnatural la apruebe vas a poder publicar actividades.
+        </div>
+        <div class="alert alert-danger mt-3 mb-0" th:if="${business.status.name() == 'REJECTED'}">
+            <i class="bi bi-x-circle"></i> Tu solicitud fue rechazada.
+            <strong>Motivo:</strong> <span th:text="${business.rejectionReason}"></span>
+        </div>
+    </div>
 </main>
+
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

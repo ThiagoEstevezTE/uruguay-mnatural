@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Pestañas del panel del administrador. "active" es la pestaña actual. -->
+<nav th:fragment="menu(active)" class="nav nav-pills mt-3">
+    <a class="nav-link" th:classappend="${active == 'inbox'} ? 'active'" th:href="@{/admin}">
+        <i class="bi bi-inbox"></i> Solicitudes
+    </a>
+    <a class="nav-link" th:classappend="${active == 'businesses'} ? 'active'" th:href="@{/admin/businesses}">
+        <i class="bi bi-shop"></i> Emprendimientos
+    </a>
+</nav>
+</body>
+</html>

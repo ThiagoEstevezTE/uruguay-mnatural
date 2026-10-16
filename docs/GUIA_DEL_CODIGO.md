@@ -222,3 +222,33 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **`layout.html`** tiene las partes comunes: el `<head>`, el menú, los mensajes y el pie. Cada página las incluye con `th:replace`, así no se repite el mismo HTML en todas.
 - **El menú cambia según quién entró** (`sec:authorize`): un visitante ve "Ingresar" y "Crear cuenta", y cada rol ve el link a su espacio.
 - **`styles.css`** cambia los colores de Bootstrap por los de la marca: verde monte, arena y un acento terracota.
+
+## 2.7 Registro de turistas y prestadores (formularios)
+
+**Archivos:** `controllers/RegisterController`, `services/TouristService`, `services/LocationService`, `dto/TouristRegistrationDTO` y `templates/register/*.html`.
+
+- **Patrón de formulario** ⭐, que se repite en todo el proyecto:
+  1. El `@GetMapping` pone un DTO vacío en el modelo (`model.addAttribute("form", new ...DTO())`) y muestra la página.
+  2. En el HTML, `th:object="${form}"` y `th:field="*{campo}"` conectan cada input con un campo del DTO.
+  3. El `@PostMapping` recibe el DTO lleno con `@ModelAttribute` y llama al service.
+  4. **Si sale bien:** `redirect:` a otra página, con un mensaje "flash" (`RedirectAttributes`) que se muestra una sola vez. Se redirige para que, si el usuario aprieta F5, no se mande el formulario de nuevo.
+  5. **Si sale mal:** se atrapa la excepción, se pone el mensaje en `error` y se vuelve a mostrar el mismo formulario con lo que había escrito.
+- **`TouristService.registerTourist`:**
+  - valida los datos del Acta 1 (punto 4.1);
+  - controla que no se repitan el email ni el documento;
+  - cifra la contraseña con BCrypt.
+
+  Es el mismo esquema que `ProviderService.registerProvider` de Lorenzo.
+- **El formulario del prestador** usa el mismo `ProviderService.registerProvider` que la API REST. La lógica está una sola vez, aunque haya dos formas de usarla.
+- **Desplegable de localidades:** `LocationService.getLocalitiesByDepartment()` arma un `Map` de departamento a localidades. El HTML lo muestra con `<optgroup>`: los departamentos son los títulos y las localidades, las opciones.
+
+## 2.8 Bandeja de solicitudes del administrador
+
+**Archivos:** `services/BusinessService`, `controllers/AdminController` y `templates/admin/*.html`.
+
+- **Sale del Acta 1, punto 4.2** ⭐: el emprendimiento queda pendiente hasta que un administrador lo aprueba. Recién ahí puede publicar actividades y aparecer en el portal.
+- **`approveBusiness`:** pasa el estado a `APPROVED` y guarda la fecha y qué administrador lo resolvió.
+- **`rejectBusiness`:** lo mismo, pero con `REJECTED`. **Exige un motivo**, que después ve el prestador en su panel.
+- **Solo se resuelven solicitudes pendientes.** No se puede aprobar dos veces ni aprobar algo que ya se rechazó.
+- **`Principal principal`:** en el controller es "quién está logueado". `principal.getName()` devuelve su email, y con eso el service sabe qué administrador resolvió.
+- **El panel del prestador** (`/provider`) muestra cada emprendimiento con su estado y, si fue rechazado, el motivo.

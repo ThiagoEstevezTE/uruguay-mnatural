@@ -182,3 +182,20 @@ main {
     background: var(--um-green-dark);
     color: rgba(255, 255, 255, .85);
 }
+
+/* Pestañas, links y foco de los campos con los colores de la marca */
+.nav-pills {
+    --bs-nav-pills-link-active-bg: var(--um-green);
+    --bs-nav-link-color: var(--um-green);
+    --bs-nav-link-hover-color: var(--um-green-dark);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #6fa28c;
+    box-shadow: 0 0 0 .2rem rgba(36, 88, 74, .18);
+}
+
+.page-link {
+    color: var(--um-green);
+}

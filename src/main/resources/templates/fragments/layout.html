@@ -66,6 +66,13 @@
     </div>
 </div>
 
+<!-- Etiqueta de color segun el estado del emprendimiento -->
+<span th:fragment="businessStatus(status)" th:switch="${status.name()}">
+    <span th:case="'PENDING'" class="badge rounded-pill text-bg-warning">Pendiente</span>
+    <span th:case="'APPROVED'" class="badge rounded-pill text-bg-success">Aprobado</span>
+    <span th:case="'REJECTED'" class="badge rounded-pill text-bg-danger">Rechazado</span>
+</span>
+
 <footer th:fragment="footer" class="footer-um mt-5">
     <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 py-4">
         <span><i class="bi bi-compass"></i> Uruguay Mnatural · Turismo en todo el país</span>

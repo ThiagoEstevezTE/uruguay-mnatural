@@ -3,9 +3,68 @@
 <head th:replace="~{fragments/layout :: head('Administración')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
-<main class="container py-4">
-    <h1 class="h3">Administración</h1>
+
+<header class="panel-header">
+    <div class="container">
+        <h1 class="h3 mb-1">Administración</h1>
+        <nav th:replace="~{admin/menu :: menu('inbox')}"></nav>
+    </div>
+</header>
+
+<main class="container">
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <h2 class="h5 mb-3">Solicitudes pendientes <span class="badge text-bg-warning" th:text="${#lists.size(pending)}">0</span></h2>
+
+    <div th:if="${pending.isEmpty()}" class="card card-um p-4 text-center text-muted">
+        <i class="bi bi-inbox fs-1"></i>
+        <p class="mb-0">No hay solicitudes pendientes.</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6" th:each="business : ${pending}">
+            <div class="card card-um p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h3 class="h5 mb-0" th:text="${business.name}">Emprendimiento</h3>
+                    <span class="small text-muted" th:text="${#temporals.format(business.requestDate, 'dd/MM/yyyy HH:mm')}"></span>
+                </div>
+                <p class="text-muted small mb-2">
+                    <i class="bi bi-geo-alt"></i>
+                    <span th:text="${business.address + ', ' + business.locality.name + ' (' + business.locality.department.name + ')'}"></span>
+                </p>
+                <p th:text="${business.description}" class="mb-3"></p>
+                <dl class="row small mb-3">
+                    <dt class="col-4">Prestador</dt>
+                    <dd class="col-8">
+                        <span th:text="${business.provider.name}"></span>
+                        <span class="text-muted" th:text="${business.provider.type.name() == 'COMPANY'} ? '(empresa)' : '(particular)'"></span>
+                    </dd>
+                    <dt class="col-4">Documento</dt>
+                    <dd class="col-8" th:text="${business.provider.document}"></dd>
+                    <dt class="col-4">Contacto</dt>
+                    <dd class="col-8" th:text="${business.provider.email + ' · ' + (business.provider.phone ?: '-')}"></dd>
+                </dl>
+
+                <div class="mt-auto">
+                    <form th:action="@{/admin/businesses/{id}/approve(id=${business.id})}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Aprobar</button>
+                    </form>
+                    <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse"
+                            th:data-bs-target="${'#reject-' + business.id}">
+                        <i class="bi bi-x-lg"></i> Rechazar
+                    </button>
+                    <form th:id="${'reject-' + business.id}" class="collapse mt-3"
+                          th:action="@{/admin/businesses/{id}/reject(id=${business.id})}" method="post">
+                        <label class="form-label small">Motivo del rechazo (lo ve el prestador)</label>
+                        <textarea name="reason" class="form-control mb-2" rows="2" required></textarea>
+                        <button type="submit" class="btn btn-danger btn-sm">Confirmar rechazo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
+
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>
 </html>

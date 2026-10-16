@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Emprendimientos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<header class="panel-header">
+    <div class="container">
+        <h1 class="h3 mb-1">Administración</h1>
+        <nav th:replace="~{admin/menu :: menu('businesses')}"></nav>
+    </div>
+</header>
+
+<main class="container">
+    <div class="table-responsive table-um card-um">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>Emprendimiento</th>
+                <th>Prestador</th>
+                <th>Ubicación</th>
+                <th>Solicitud</th>
+                <th>Estado</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="business : ${businesses}">
+                <td class="fw-semibold" th:text="${business.name}"></td>
+                <td th:text="${business.provider.name}"></td>
+                <td th:text="${business.locality.name + ', ' + business.locality.department.name}"></td>
+                <td th:text="${#temporals.format(business.requestDate, 'dd/MM/yyyy')}"></td>
+                <td>
+                    <span th:replace="~{fragments/layout :: businessStatus(${business.status})}"></span>
+                    <div class="small text-muted" th:if="${business.rejectionReason}" th:text="${business.rejectionReason}"></div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
