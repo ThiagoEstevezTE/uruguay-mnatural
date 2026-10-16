@@ -1,7 +1,9 @@
 # Uruguay Mnatural
 
 Plataforma que conecta turistas con prestadores de actividades turísticas de todo Uruguay.
-Proyecto TIC 2026 (Universidad de Montevideo), equipo **TeroBytes**: Patricio Saravia, Lorenzo Gianola, Federico Dolivo y Thiago Estevez.
+
+Software desarrollado por **TeroBytes** para su cliente Uruguay Mnatural.
+TeroBytes es la empresa de Patricio Saravia, Lorenzo Gianola, Federico Dolivo y Thiago Estevez (Proyecto TIC 2026, Universidad de Montevideo).
 
 ## Qué se necesita
 
