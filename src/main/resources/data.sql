@@ -1,8 +1,10 @@
+-- Corre en cada arranque. ON CONFLICT DO NOTHING: si ya estan cargados (base que no se borra, como Supabase), no se duplican.
 INSERT INTO departments (name) VALUES
                                    ('Artigas'), ('Canelones'), ('Cerro Largo'), ('Colonia'), ('Durazno'),
                                    ('Flores'), ('Florida'), ('Lavalleja'), ('Maldonado'), ('Montevideo'),
                                    ('Paysandú'), ('Río Negro'), ('Rivera'), ('Rocha'), ('Salto'),
-                                   ('San José'), ('Soriano'), ('Tacuarembó'), ('Treinta y Tres');
+                                   ('San José'), ('Soriano'), ('Tacuarembó'), ('Treinta y Tres')
+ON CONFLICT DO NOTHING;
 
 -- Coordenadas (latitud, longitud) para consultar el pronostico del clima
 INSERT INTO localities (name, department_id, latitude, longitude) VALUES
@@ -34,4 +36,5 @@ INSERT INTO localities (name, department_id, latitude, longitude) VALUES
     ('San José de Mayo', 16, -34.3375, -56.7136),
     ('Mercedes', 17, -33.2524, -58.0305),
     ('Tacuarembó', 18, -31.7333, -55.9833),
-    ('Treinta y Tres', 19, -33.2333, -54.3833);
+    ('Treinta y Tres', 19, -33.2333, -54.3833)
+ON CONFLICT DO NOTHING;

@@ -34,11 +34,13 @@ TeroBytes es la empresa de Patricio Saravia, Lorenzo Gianola, Federico Dolivo y 
 
 3. Abrí http://localhost:8080.
 
-Cada vez que arranca, la app crea las tablas de cero y carga los datos de ejemplo (`spring.jpa.hibernate.ddl-auto=create`). Así la demo siempre empieza igual.
+Por defecto la app **no borra nada** al arrancar (`DB_DDL_AUTO=update`): crea las tablas que falten y carga los datos de ejemplo solo si la base está vacía. Es lo que hay que usar con Supabase.
+
+Para que la demo local empiece siempre igual, poné `DB_DDL_AUTO=create` en tu `.env`: así cada arranque borra todo y vuelve a cargar los datos de ejemplo. Nunca uses `create` con Supabase.
 
 ## Cuentas de prueba
 
-Todas usan la contraseña `demo1234`.
+Todas usan la contraseña `demo1234`. Se puede cambiar con `DEMO_PASSWORD` en el `.env`, antes del primer arranque; conviene hacerlo si la base o la app quedan accesibles para otros.
 
 | Rol | Email | Qué tiene cargado |
 |---|---|---|

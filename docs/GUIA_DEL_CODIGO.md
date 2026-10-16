@@ -166,7 +166,11 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
   - `application.properties` los lee de ahí con `spring.config.import=optional:file:.env[.properties]`;
   - `.env` está en `.gitignore`, así que las contraseñas no se suben a GitHub;
   - cada integrante crea su `.env` a partir de `.env.example`.
-- **`ddl-auto=create`:** Hibernate crea las tablas a partir de las entidades cada vez que arranca. Después corren `data.sql` (departamentos y localidades) y `DataLoader` (usuarios de ejemplo).
+- **`ddl-auto` sale del `.env` (`DB_DDL_AUTO`):**
+  - por defecto `update`: Hibernate crea las tablas que falten y no borra nada (seguro para Supabase);
+  - con `create`, cada arranque borra todo y la demo local empieza siempre igual.
+  - Después corren `data.sql` (departamentos y localidades) y `DataLoader` (usuarios de ejemplo).
+  - `data.sql` usa `ON CONFLICT DO NOTHING`: si los departamentos y localidades ya están (nombre único), no los vuelve a insertar.
 - **Tests:** usan H2 en memoria (`src/test/resources/application.properties`), así no dependen de tener una base andando.
 - **Bootstrap e iconos:** vienen como dependencias de Maven (webjars), así la página se ve bien aunque no haya internet en la demo.
 
@@ -201,7 +205,9 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 
 - Es un `CommandLineRunner`: Spring lo ejecuta una vez, apenas termina de arrancar.
 - Crea las cuentas de prueba del README: un administrador, una turista, un prestador aprobado y uno pendiente.
-- Si ya hay usuarios en la base, no hace nada. Así no se duplica nada si algún día se cambia `ddl-auto`.
+- Si ya hay usuarios en la base, no hace nada. Así no se duplica nada cuando la base no se borra (`ddl-auto=update`).
+- La contraseña de las cuentas sale de `app.demo-password` (variable `DEMO_PASSWORD` del `.env`, por defecto `demo1234`).
+- La prueba `DemoDataTest` simula un segundo arranque y comprueba que no se duplique nada.
 
 ## 2.5 API REST del registro de prestadores
 

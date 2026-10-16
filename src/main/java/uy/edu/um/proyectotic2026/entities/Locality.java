@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "localities")
+// No puede haber dos localidades con el mismo nombre en un departamento
+@Table(name = "localities", uniqueConstraints = @UniqueConstraint(columnNames = {"name", "department_id"}))
 @Getter
 @Setter
 @Builder

@@ -1,6 +1,7 @@
 package uy.edu.um.proyectotic2026.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,9 @@ import java.time.LocalTime;
 @Component
 public class DataLoader implements CommandLineRunner {
 
-    public static final String DEMO_PASSWORD = "demo1234";
+    // Contraseña de todas las cuentas de ejemplo. Se puede cambiar en el .env (DEMO_PASSWORD).
+    @Value("${app.demo-password}")
+    private String demoPassword;
 
     @Autowired
     private UserRepository userRepo;
@@ -68,7 +71,7 @@ public class DataLoader implements CommandLineRunner {
         if (userRepo.count() > 0)
             return;
 
-        password = passwordEncoder.encode(DEMO_PASSWORD);
+        password = passwordEncoder.encode(demoPassword);
 
         loadCatalogs();
         loadUsers();
