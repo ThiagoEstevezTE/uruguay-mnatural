@@ -131,7 +131,12 @@ public class BookingService {
     public Booking payBooking(Long bookingId, String touristEmail, String cardNumber)
             throws EntityNotFoundException, InvalidDataException, PaymentUnavailableException {
 
-        Booking booking = getBookingOfTourist(bookingId, touristEmail);
+        // Se bloquea la reserva: un doble clic en "Pagar" no puede cobrar dos veces.
+        // El segundo pedido espera, y cuando sigue la reserva ya esta confirmada.
+        Booking booking = bookingRepo.findLockedById(bookingId)
+                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+        if (!booking.getTourist().getEmail().equals(touristEmail))
+            throw new EntityNotFoundException("Reserva no encontrada");
 
         if (booking.getStatus() != BookingStatus.PENDING)
             throw new InvalidDataException("Esta reserva no está pendiente de pago");

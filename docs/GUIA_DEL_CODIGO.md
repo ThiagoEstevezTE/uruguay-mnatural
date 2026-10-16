@@ -400,6 +400,11 @@ BookingService.payBooking
 - **Cada intento de pago queda guardado**, salga bien o mal. Sirve para auditoría y para mostrarle al turista qué pasó.
 - **De la tarjeta solo se guardan la marca y los últimos 4 números**, nunca el número completo ni el CVV.
 - **`@Transactional(noRollbackFor = ...)`:** si el pago falla, se lanza una excepción, pero el registro del intento fallido se guarda igual.
+- **No se cobra dos veces** ⭐: `payBooking` trae la reserva con `findLockedById`, que tiene `@Lock(PESSIMISTIC_WRITE)` (en SQL, `SELECT ... FOR UPDATE`).
+  - Si el turista hace doble clic en "Pagar", el segundo pedido espera a que termine el primero.
+  - Cuando sigue, la reserva ya está confirmada y responde "no está pendiente de pago".
+  - El vencimiento automático también bloquea, así que no cancela una reserva mientras se está pagando.
+  - Lo prueba `BookingConcurrencyTest`, que lanza los dos pagos a la vez en dos hilos.
 
 ## 2.13 Código QR y asistencia
 
@@ -508,6 +513,7 @@ src/main/resources/
 - **¿Cómo se guardan las contraseñas?** Con BCrypt, un hash de una sola vía. Ni nosotros podemos verlas (ver 1.10).
 - **¿Cómo evitan que un prestador edite la actividad de otro?** El service siempre controla que lo que se pide sea del usuario logueado (`getActivityOfProvider`, `getBookingOfTourist`). Si no es suyo, responde "no encontrado".
 - **¿Qué pasa si el servicio de pagos se cae?** La reserva queda pendiente, el intento se guarda con estado ERROR y se le pide al turista que reintente. Nunca se confirma sin pago aprobado (ver 2.12).
+- **¿Qué pasa si alguien hace doble clic en "Pagar"?** Se bloquea la reserva mientras se paga (`SELECT ... FOR UPDATE`): el segundo pedido espera y encuentra la reserva ya confirmada. Se cobra una sola vez (ver 2.12).
 - **¿Cómo se cancelan solas las reservas vencidas?** Con `@Scheduled`: un método que Spring ejecuta cada minuto (ver 2.11).
 - **¿Cómo manejan el cupo si el acta dice que no hay?** Es opcional por fecha. Si el prestador no lo pone, no hay límite. Quedó así porque el acta dice que se va a volver a consultar.
 - **¿Qué es `@Transactional`?** Que todo lo que hace el método se guarda junto o no se guarda nada. Por ejemplo, el prestador y su emprendimiento se crean juntos.
