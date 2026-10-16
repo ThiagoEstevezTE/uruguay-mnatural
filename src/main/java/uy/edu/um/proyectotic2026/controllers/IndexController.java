@@ -78,6 +78,12 @@ public class IndexController {
         return "activity";
     }
 
+    // Autor y licencia de cada foto de los lugares (las licencias libres piden nombrarlos)
+    @GetMapping("/credits")
+    public String credits() {
+        return "credits";
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public String notFound(EntityNotFoundException e, Model model) {
