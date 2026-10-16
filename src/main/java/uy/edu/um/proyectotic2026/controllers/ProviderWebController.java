@@ -1,15 +1,23 @@
 package uy.edu.um.proyectotic2026.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import uy.edu.um.proyectotic2026.dto.ActivityDTO;
+import uy.edu.um.proyectotic2026.entities.Activity;
+import uy.edu.um.proyectotic2026.entities.Business;
+import uy.edu.um.proyectotic2026.entities.BusinessStatus;
 import uy.edu.um.proyectotic2026.entities.Provider;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
-import uy.edu.um.proyectotic2026.services.ProviderService;
+import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
+import uy.edu.um.proyectotic2026.services.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.List;
 
 // Espacio de gestion del prestador
 @Controller
@@ -19,12 +27,135 @@ public class ProviderWebController {
     @Autowired
     private ProviderService providerService;
 
+    @Autowired
+    private ActivityService activityService;
+
+    @Autowired
+    private LocationService locationService;
+
+    @Autowired
+    private ActivityTypeService typeService;
+
+    @Autowired
+    private EquipmentService equipmentService;
+
     @GetMapping
     public String home(Model model, Principal principal) throws EntityNotFoundException {
         // principal.getName() es el email de quien inicio sesion
         Provider provider = providerService.getByEmail(principal.getName());
         model.addAttribute("provider", provider);
         model.addAttribute("businesses", provider.getBusinesses());
+        model.addAttribute("activities", activityService.getActivitiesOfProvider(principal.getName()));
+        model.addAttribute("canPublish", !getApprovedBusinesses(provider).isEmpty());
         return "provider/home";
+    }
+
+    // ---------- Actividades ----------
+
+    @GetMapping("/activities/new")
+    public String newActivity(Model model, Principal principal, RedirectAttributes redirect)
+            throws EntityNotFoundException {
+
+        Provider provider = providerService.getByEmail(principal.getName());
+        List<Business> approved = getApprovedBusinesses(provider);
+        if (approved.isEmpty()) {
+            redirect.addFlashAttribute("error", "Para publicar actividades tu emprendimiento tiene que estar aprobado.");
+            return "redirect:/provider";
+        }
+
+        ActivityDTO form = new ActivityDTO();
+        form.setBusinessId(approved.get(0).getId());
+        form.setLocalityId(approved.get(0).getLocality().getId());
+        model.addAttribute("form", form);
+        addActivityFormData(model, provider);
+        return "provider/activity-form";
+    }
+
+    @PostMapping("/activities/new")
+    public String createActivity(@ModelAttribute("form") ActivityDTO form, Model model, Principal principal,
+                                 RedirectAttributes redirect) throws EntityNotFoundException {
+        try {
+            Activity activity = activityService.createActivity(form, principal.getName());
+            redirect.addFlashAttribute("message", "Actividad creada. Ahora agregale fechas y horarios.");
+            return "redirect:/provider/activities/" + activity.getId();
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            addActivityFormData(model, providerService.getByEmail(principal.getName()));
+            return "provider/activity-form";
+        }
+    }
+
+    @GetMapping("/activities/{id}")
+    public String activityDetail(@PathVariable("id") Long id, Model model, Principal principal)
+            throws EntityNotFoundException {
+
+        model.addAttribute("activity", activityService.getActivityOfProvider(id, principal.getName()));
+        return "provider/activity";
+    }
+
+    @GetMapping("/activities/{id}/edit")
+    public String editActivity(@PathVariable("id") Long id, Model model, Principal principal)
+            throws EntityNotFoundException {
+
+        Activity activity = activityService.getActivityOfProvider(id, principal.getName());
+        model.addAttribute("form", ActivityDTO.from(activity));
+        model.addAttribute("activityId", id);
+        addActivityFormData(model, providerService.getByEmail(principal.getName()));
+        return "provider/activity-form";
+    }
+
+    @PostMapping("/activities/{id}/edit")
+    public String updateActivity(@PathVariable("id") Long id, @ModelAttribute("form") ActivityDTO form,
+                                 Model model, Principal principal, RedirectAttributes redirect)
+            throws EntityNotFoundException {
+        try {
+            activityService.updateActivity(id, form, principal.getName());
+            redirect.addFlashAttribute("message", "Cambios guardados.");
+            return "redirect:/provider/activities/" + id;
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("activityId", id);
+            addActivityFormData(model, providerService.getByEmail(principal.getName()));
+            return "provider/activity-form";
+        }
+    }
+
+    // ---------- Fechas y horarios ----------
+
+    @PostMapping("/activities/{id}/instances")
+    public String addInstance(@PathVariable("id") Long id,
+                              @RequestParam(value = "start", required = false)
+                              @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime start,
+                              @RequestParam(value = "maxCapacity", required = false) Integer maxCapacity,
+                              Principal principal, RedirectAttributes redirect) {
+        try {
+            activityService.addInstance(id, start, maxCapacity, principal.getName());
+            redirect.addFlashAttribute("message", "Fecha agregada.");
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/provider/activities/" + id;
+    }
+
+    // Si el service tira EntityNotFoundException (por ejemplo, una actividad de otro prestador),
+    // se muestra la pagina de error con el mensaje
+    @ExceptionHandler(EntityNotFoundException.class)
+    public String notFound(EntityNotFoundException e, Model model) {
+        model.addAttribute("error", e.getMessage());
+        return "error/not-found";
+    }
+
+    private List<Business> getApprovedBusinesses(Provider provider) {
+        return provider.getBusinesses().stream()
+                .filter(b -> b.getStatus() == BusinessStatus.APPROVED)
+                .toList();
+    }
+
+    // Datos para los desplegables y casillas del formulario de actividad
+    private void addActivityFormData(Model model, Provider provider) {
+        model.addAttribute("businesses", getApprovedBusinesses(provider));
+        model.addAttribute("localitiesByDepartment", locationService.getLocalitiesByDepartment());
+        model.addAttribute("types", typeService.getAll());
+        model.addAttribute("equipmentList", equipmentService.getAll());
     }
 }
