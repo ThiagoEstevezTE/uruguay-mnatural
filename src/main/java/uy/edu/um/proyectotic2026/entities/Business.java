@@ -49,4 +49,9 @@ public class Business {
     private LocalDateTime resolutionDate;
 
     private String rejectionReason;
+
+    // Administrador que aprobo o rechazo la solicitud (admin_resolutor_id en el MER)
+    @ManyToOne
+    @JoinColumn(name = "admin_resolver_id")
+    private Administrator resolvedBy;
 }
