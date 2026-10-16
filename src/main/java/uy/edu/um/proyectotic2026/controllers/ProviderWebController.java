@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uy.edu.um.proyectotic2026.dto.ActivityDTO;
 import uy.edu.um.proyectotic2026.entities.Activity;
+import uy.edu.um.proyectotic2026.entities.Booking;
 import uy.edu.um.proyectotic2026.entities.Business;
 import uy.edu.um.proyectotic2026.entities.BusinessStatus;
 import uy.edu.um.proyectotic2026.entities.Provider;
@@ -39,6 +40,9 @@ public class ProviderWebController {
 
     @Autowired
     private EquipmentService equipmentService;
+
+    @Autowired
+    private BookingService bookingService;
 
     @GetMapping
     public String home(Model model, Principal principal) throws EntityNotFoundException {
@@ -136,6 +140,41 @@ public class ProviderWebController {
             redirect.addFlashAttribute("error", e.getMessage());
         }
         return "redirect:/provider/activities/" + id;
+    }
+
+    @PostMapping("/instances/{id}/cancel")
+    public String cancelInstance(@PathVariable("id") Long instanceId,
+                                 @RequestParam("activityId") Long activityId,
+                                 Principal principal, RedirectAttributes redirect) {
+        try {
+            int cancelled = bookingService.cancelInstance(instanceId, principal.getName());
+            redirect.addFlashAttribute("message", "Fecha cancelada. Se cancelaron " + cancelled + " reservas.");
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/provider/activities/" + activityId;
+    }
+
+    // ---------- Reservas ----------
+
+    // Reservas de todas las actividades del prestador, con las observaciones del turista (Acta 1, punto 4.4)
+    @GetMapping("/bookings")
+    public String bookings(Model model, Principal principal) {
+        model.addAttribute("bookings", bookingService.getBookingsOfProvider(principal.getName()));
+        return "provider/bookings";
+    }
+
+    // Registrar asistencia con el numero de reserva (el que esta en el QR)
+    @PostMapping("/bookings/check-in")
+    public String checkIn(@RequestParam("code") String code, Principal principal, RedirectAttributes redirect) {
+        try {
+            Booking booking = bookingService.checkIn(code, principal.getName());
+            redirect.addFlashAttribute("message", "Asistencia registrada: " + booking.getTourist().getFullName()
+                    + " (" + booking.getParticipants() + " personas) en " + booking.getActivity().getName() + ".");
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/provider/bookings";
     }
 
     // Si el service tira EntityNotFoundException (por ejemplo, una actividad de otro prestador),

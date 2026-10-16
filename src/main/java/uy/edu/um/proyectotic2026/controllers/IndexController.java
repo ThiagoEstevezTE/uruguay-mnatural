@@ -11,10 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import uy.edu.um.proyectotic2026.dto.ActivitySearchDTO;
 import uy.edu.um.proyectotic2026.entities.Activity;
+import uy.edu.um.proyectotic2026.entities.Rating;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.services.ActivityTypeService;
 import uy.edu.um.proyectotic2026.services.LocationService;
 import uy.edu.um.proyectotic2026.services.PortalService;
+import uy.edu.um.proyectotic2026.services.RatingService;
+
+import java.util.List;
 
 // Portal publico para turistas: portada, buscador y detalle de cada actividad
 @Controller
@@ -28,6 +32,9 @@ public class IndexController {
 
     @Autowired
     private ActivityTypeService typeService;
+
+    @Autowired
+    private RatingService ratingService;
 
     @GetMapping("/")
     public String index(Model model) {
@@ -50,6 +57,13 @@ public class IndexController {
         Activity activity = portalService.getPublicActivity(id);
         model.addAttribute("activity", activity);
         model.addAttribute("instances", activity.getUpcomingInstances());
+
+        // Valoraciones publicas de la actividad (letra: "forman parte de la informacion publica")
+        List<Rating> ratings = ratingService.getRatingsOfActivity(id);
+        model.addAttribute("ratings", ratings);
+        Double average = ratingService.getAverage(ratings);
+        model.addAttribute("average", average);
+        model.addAttribute("averageStars", average == null ? 0 : Math.round(average));
         return "activity";
     }
 

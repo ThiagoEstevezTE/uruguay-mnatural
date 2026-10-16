@@ -36,6 +36,10 @@ public class ActivityInstance {
 
     private LocalDateTime cancellationDate;
 
+    public boolean isFuture() {
+        return startDateTime.isAfter(LocalDateTime.now());
+    }
+
     // Hasta que hora se puede reservar, segun los minutos limite de la actividad
     public LocalDateTime getBookingDeadline() {
         return startDateTime.minusMinutes(activity.getBookingLimitMinutes());
