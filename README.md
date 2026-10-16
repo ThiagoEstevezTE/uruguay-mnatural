@@ -5,6 +5,21 @@ Plataforma que conecta turistas con prestadores de actividades turísticas de to
 Software desarrollado por **TeroBytes** para su cliente Uruguay Mnatural.
 TeroBytes es la empresa de Patricio Saravia, Lorenzo Gianola, Federico Dolivo y Thiago Estevez (Proyecto TIC 2026, Universidad de Montevideo).
 
+## Bajarlo de GitHub (para el equipo)
+
+1. Aceptá la invitación al repositorio que te llega por mail desde GitHub.
+2. Bajá el proyecto. En IntelliJ: **File → New → Project from Version Control**, pegá la dirección del repositorio y tocá **Clone**. Desde la terminal es lo mismo:
+
+   ```
+   git clone https://github.com/USUARIO/REPOSITORIO.git
+   ```
+
+3. Pedile a Thiago el archivo `.env` (tiene la conexión a la base y no está en GitHub) y ponelo en la carpeta del proyecto, al lado de `pom.xml`.
+4. Corré la app como dice [Cómo correrlo](#cómo-correrlo), desde el paso 2.
+5. Para saber cómo se usa cada pantalla, mirá [`docs/GUIA_DE_USO.md`](docs/GUIA_DE_USO.md).
+
+Para traer lo último que subieron los demás: en IntelliJ, **Git → Pull**, o `git pull` en la terminal.
+
 ## Qué se necesita
 
 - **JDK 25**.
@@ -72,6 +87,9 @@ Los tests usan H2 en memoria, así que no necesitan Postgres.
 
 ## Documentación
 
+- [`docs/GUIA_DE_USO.md`](docs/GUIA_DE_USO.md): cómo se usa cada función de la página, paso a paso y con capturas.
+- [`docs/GUION_DEMO.md`](docs/GUION_DEMO.md): el recorrido de la presentación y cómo prepararla.
+- `docs/manuales/`: manuales de usuario para turistas, prestadores y administradores.
 - `docs/GUIA_DEL_CODIGO.md`: cómo está hecho el código, parte por parte, y los conceptos clave.
 - `docs/HISTORIAL.md`: decisiones tomadas y equivalencia entre el MER y el código.
 - `docs/PLAN.md`: plan original del registro de prestadores.
