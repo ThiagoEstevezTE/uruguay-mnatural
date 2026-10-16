@@ -32,6 +32,11 @@ public class BusinessService {
         return businessRepo.findAllByOrderByRequestDateDesc();
     }
 
+    // Emprendimientos aprobados (los que se ven en el portal)
+    public List<Business> getApprovedBusinesses() {
+        return businessRepo.findByStatusOrderByNameAsc(BusinessStatus.APPROVED);
+    }
+
     public Business getById(Long id) throws EntityNotFoundException {
         return businessRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Emprendimiento no encontrado"));

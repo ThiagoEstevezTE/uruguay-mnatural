@@ -7,6 +7,9 @@ import uy.edu.um.proyectotic2026.entities.*;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.repository.ActivityRepository;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.List;
 
 // Lo que ve cualquier visitante, sin necesidad de registrarse
@@ -15,6 +18,9 @@ public class PortalService {
 
     @Autowired
     private ActivityRepository activityRepo;
+
+    @Autowired
+    private RatingService ratingService;
 
     // Busca entre las actividades visibles que tienen alguna fecha proxima.
     // Cada filtro se aplica solo si el visitante lo completo.
@@ -49,6 +55,39 @@ public class PortalService {
         if (!activity.isPublished() || activity.getBusiness().getStatus() != BusinessStatus.APPROVED)
             throw new EntityNotFoundException("Actividad no encontrada");
         return activity;
+    }
+
+    // ---------- Para la API publica ----------
+
+    // Actividades con alguna fecha programada en ese dia, en un departamento o localidad (opcionales)
+    public List<Activity> getActivitiesOnDate(LocalDate date, Long departmentId, Long localityId) {
+        return getVisibleActivities().stream()
+                .filter(a -> departmentId == null || a.getLocality().getDepartment().getId().equals(departmentId))
+                .filter(a -> localityId == null || a.getLocality().getId().equals(localityId))
+                .filter(a -> a.getInstances().stream().anyMatch(i -> i.getStatus() == InstanceStatus.SCHEDULED
+                        && i.getStartDateTime().toLocalDate().equals(date)))
+                .toList();
+    }
+
+    // Las 3 actividades mejor puntuadas de un departamento, con las valoraciones hechas en ese mes
+    public List<Activity> getTopRated(Long departmentId, YearMonth month) {
+        return getVisibleActivities().stream()
+                .filter(a -> a.getLocality().getDepartment().getId().equals(departmentId))
+                .filter(a -> getMonthAverage(a, month) != null)
+                .sorted(Comparator.comparing((Activity a) -> getMonthAverage(a, month)).reversed())
+                .limit(3)
+                .toList();
+    }
+
+    public Double getMonthAverage(Activity activity, YearMonth month) {
+        List<Rating> ratings = ratingService.getRatingsOfActivity(activity.getId()).stream()
+                .filter(r -> YearMonth.from(r.getDate()).equals(month))
+                .toList();
+        return ratingService.getAverage(ratings);
+    }
+
+    public Double getAverage(Activity activity) {
+        return ratingService.getAverage(ratingService.getRatingsOfActivity(activity.getId()));
     }
 
     private List<Activity> getVisibleActivities() {

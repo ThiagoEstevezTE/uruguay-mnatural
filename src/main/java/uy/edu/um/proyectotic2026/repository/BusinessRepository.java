@@ -17,4 +17,6 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
     List<Business> findAllByOrderByRequestDateDesc();
 
     long countByStatus(BusinessStatus status);
+
+    List<Business> findByStatusOrderByNameAsc(BusinessStatus status);
 }

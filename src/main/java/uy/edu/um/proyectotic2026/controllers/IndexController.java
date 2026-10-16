@@ -11,13 +11,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import uy.edu.um.proyectotic2026.dto.ActivitySearchDTO;
 import uy.edu.um.proyectotic2026.entities.Activity;
+import uy.edu.um.proyectotic2026.entities.ActivityInstance;
 import uy.edu.um.proyectotic2026.entities.Rating;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.services.ActivityTypeService;
 import uy.edu.um.proyectotic2026.services.LocationService;
 import uy.edu.um.proyectotic2026.services.PortalService;
 import uy.edu.um.proyectotic2026.services.RatingService;
+import uy.edu.um.proyectotic2026.services.WeatherService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 // Portal publico para turistas: portada, buscador y detalle de cada actividad
@@ -35,6 +38,9 @@ public class IndexController {
 
     @Autowired
     private RatingService ratingService;
+
+    @Autowired
+    private WeatherService weatherService;
 
     @GetMapping("/")
     public String index(Model model) {
@@ -56,7 +62,12 @@ public class IndexController {
     public String activityDetail(@PathVariable("id") Long id, Model model) throws EntityNotFoundException {
         Activity activity = portalService.getPublicActivity(id);
         model.addAttribute("activity", activity);
-        model.addAttribute("instances", activity.getUpcomingInstances());
+        List<ActivityInstance> instances = activity.getUpcomingInstances();
+        model.addAttribute("instances", instances);
+
+        // Pronostico del clima para cada fecha (si hay internet y la fecha esta dentro de los 15 dias)
+        List<LocalDate> dates = instances.stream().map(i -> i.getStartDateTime().toLocalDate()).toList();
+        model.addAttribute("weather", weatherService.getForecast(activity.getLocality(), dates));
 
         // Valoraciones publicas de la actividad (letra: "forman parte de la informacion publica")
         List<Rating> ratings = ratingService.getRatingsOfActivity(id);

@@ -22,4 +22,9 @@ public class Locality {
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
+
+    // Coordenadas para el pronostico del clima (API publica Open-Meteo)
+    private Double latitude;
+
+    private Double longitude;
 }
