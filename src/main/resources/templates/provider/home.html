@@ -35,6 +35,48 @@
             <strong>Motivo:</strong> <span th:text="${business.rejectionReason}"></span>
         </div>
     </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+        <h2 class="h5 mb-0">Mis actividades</h2>
+        <a th:if="${canPublish}" class="btn btn-primary" th:href="@{/provider/activities/new}">
+            <i class="bi bi-plus-lg"></i> Nueva actividad
+        </a>
+    </div>
+
+    <div th:if="${activities.isEmpty()}" class="card card-um p-4 text-center text-muted">
+        <i class="bi bi-map fs-1"></i>
+        <p class="mb-0" th:text="${canPublish} ? 'Todavía no cargaste actividades.' : 'Vas a poder cargar actividades cuando tu emprendimiento esté aprobado.'"></p>
+    </div>
+
+    <div class="table-responsive table-um card-um" th:unless="${activities.isEmpty()}">
+        <table class="table align-middle mb-0">
+            <thead>
+            <tr>
+                <th>Actividad</th>
+                <th>Lugar</th>
+                <th>Precio</th>
+                <th>Fechas</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="activity : ${activities}">
+                <td class="fw-semibold" th:text="${activity.name}"></td>
+                <td th:text="${activity.locality.name}"></td>
+                <td th:text="${'$ ' + #numbers.formatDecimal(activity.price, 1, 'POINT', 0, 'COMMA')}"></td>
+                <td th:text="${#lists.size(activity.instances)}"></td>
+                <td>
+                    <span th:if="${activity.published}" class="badge rounded-pill text-bg-success">Publicada</span>
+                    <span th:unless="${activity.published}" class="badge rounded-pill text-bg-secondary">Oculta</span>
+                </td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" th:href="@{/provider/activities/{id}(id=${activity.id})}">Gestionar</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

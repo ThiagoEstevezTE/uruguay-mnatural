@@ -9,6 +9,12 @@
     <a class="nav-link" th:classappend="${active == 'businesses'} ? 'active'" th:href="@{/admin/businesses}">
         <i class="bi bi-shop"></i> Emprendimientos
     </a>
+    <a class="nav-link" th:classappend="${active == 'activity-types'} ? 'active'" th:href="@{/admin/activity-types}">
+        <i class="bi bi-tags"></i> Tipos de actividad
+    </a>
+    <a class="nav-link" th:classappend="${active == 'equipment'} ? 'active'" th:href="@{/admin/equipment}">
+        <i class="bi bi-backpack"></i> Equipamiento
+    </a>
 </nav>
 </body>
 </html>

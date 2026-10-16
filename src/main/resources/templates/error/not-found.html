@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('No encontrado')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<main class="container py-5 text-center">
+    <i class="bi bi-signpost-split fs-1 text-muted"></i>
+    <h1 class="h3 mt-3" th:text="${error ?: 'No encontramos lo que buscabas'}">No encontrado</h1>
+    <a class="btn btn-primary mt-3" th:href="@{/}">Volver al inicio</a>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

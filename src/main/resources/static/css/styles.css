@@ -199,3 +199,8 @@ main {
 .page-link {
     color: var(--um-green);
 }
+
+.form-control,
+.form-select {
+    background-color: #fff;
+}

@@ -252,3 +252,51 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **Solo se resuelven solicitudes pendientes.** No se puede aprobar dos veces ni aprobar algo que ya se rechazó.
 - **`Principal principal`:** en el controller es "quién está logueado". `principal.getName()` devuelve su email, y con eso el service sabe qué administrador resolvió.
 - **El panel del prestador** (`/provider`) muestra cada emprendimiento con su estado y, si fue rechazado, el motivo.
+
+## 2.9 Actividades, fechas, tipos y equipamiento
+
+**Entidades** (todas siguen el MER):
+
+| MER | Clase | Qué es |
+|---|---|---|
+| ACTIVIDAD | `Activity` | La experiencia que ofrece un emprendimiento: nombre, descripción, lugar, duración, precio y condiciones. |
+| INSTANCIA_ACTIVIDAD | `ActivityInstance` | Una fecha y hora concreta de esa actividad. Una actividad tiene muchas. |
+| TIPO_ACTIVIDAD | `ActivityType` | Categoría (senderismo, cabalgata…). |
+| ACTIVIDAD_TIPO | tabla `activity_activity_types` | Relación muchos a muchos entre actividad y tipo. |
+| EQUIPAMIENTO | `Equipment` | Casco, chaleco salvavidas… |
+| ACTIVIDAD_EQUIPAMIENTO | `ActivityEquipment` | Relación entre actividad y equipamiento, con el dato `providedByProvider`. |
+
+- **`@ManyToMany` vs. entidad intermedia** ⭐:
+  - Actividad–tipo es un `@ManyToMany` común, porque la tabla del medio solo guarda las dos claves.
+  - Actividad–equipamiento necesita una **clase propia** (`ActivityEquipment`), porque la relación tiene un dato extra: si el equipamiento lo da el prestador o lo trae el turista. Un `@ManyToMany` no puede guardar datos propios.
+- **`BigDecimal` para el precio** ⭐: con `double`, 0.1 + 0.2 da 0.30000000000000004. Para plata siempre se usa `BigDecimal`, que es exacto.
+- **Campos de `Activity` que salen de la letra y del acta:**
+  - `minimumAge`: requisito de edad (letra). Se controla al reservar, con la fecha de nacimiento del turista.
+  - `bookingLimitMinutes`: hasta cuántos minutos antes del inicio se puede reservar (letra). 0 = hasta la hora de inicio.
+  - `allowsCancellation` y `cancellationMinHours`: si el turista puede cancelar y con cuánta anticipación (Acta 1, punto 4.5).
+  - `published`: el prestador puede ocultar una actividad sin borrarla.
+- **`ActivityInstance.maxCapacity` es opcional:** el acta dice que no hay cupos, pero que se va a volver a consultar (punto 4.3). Por eso el campo existe y, si queda vacío, la fecha no tiene cupo.
+- **`ActivityInstance.getBookingDeadline()`** calcula la hora límite para reservar: inicio menos los minutos límite.
+- **`cascade = CascadeType.ALL`:** al guardar la actividad se guardan también sus fechas y su equipamiento.
+- **`orphanRemoval = true`:** si se saca un equipamiento de la lista, se borra de la base.
+
+**`ActivityService`** (lo que hace el prestador):
+- `createActivity` y `updateActivity`:
+  - validan los datos;
+  - **solo dejan publicar si el emprendimiento es del prestador logueado y está APROBADO** ⭐ (Acta 1, punto 4.2).
+- `addInstance`: agrega una fecha. Tiene que ser futura, y el cupo, si se pone, tiene que ser de al menos 1.
+- `getActivityOfProvider`: si la actividad es de otro prestador, responde "no encontrada". Así nadie puede ver ni editar actividades ajenas cambiando el número en la URL ⭐.
+
+**`ActivityTypeService` y `EquipmentService`** (lo que hace el administrador): alta, modificación y baja.
+- No se puede repetir un nombre.
+- No se puede borrar algo que ya usa alguna actividad, para no dejar actividades "colgadas".
+
+**Pantallas:**
+- `provider/activity-form.html`: el mismo formulario sirve para crear y para editar (`ActivityDTO.from(activity)` lo llena con los datos actuales).
+- `provider/activity.html`: detalle de la actividad, con sus fechas y el formulario para agregar más.
+- `admin/catalog.html`: una sola plantilla para los dos ABM (tipos y equipamiento). Cambian el título y la URL.
+
+**Datos de ejemplo** (`DataLoader`):
+- 9 tipos de actividad y 10 equipamientos;
+- 4 emprendimientos aprobados en Rocha, Lavalleja, Colonia y Maldonado, y 1 pendiente;
+- 7 actividades con fechas en los próximos días. Las fechas se calculan desde el día en que arranca la app, así la demo siempre tiene fechas futuras.

@@ -1,0 +1,75 @@
+package uy.edu.um.proyectotic2026.controllers;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+import uy.edu.um.proyectotic2026.repository.ActivityRepository;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+// Que las pantallas del prestador y del administrador se muestren sin errores
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class ProviderAndAdminPagesTest {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ActivityRepository activityRepo;
+
+    @Test
+    @WithMockUser(username = "prestador@demo.uy", roles = "PROVIDER")
+    void providerActivityPagesRender() throws Exception {
+        Long id = activityRepo.findByBusinessProviderEmailOrderByNameAsc("prestador@demo.uy").get(0).getId();
+
+        mvc.perform(get("/provider")).andExpect(status().isOk());
+        mvc.perform(get("/provider/activities/new")).andExpect(status().isOk());
+        mvc.perform(get("/provider/activities/" + id)).andExpect(status().isOk());
+        mvc.perform(get("/provider/activities/" + id + "/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "kayak@demo.uy", roles = "PROVIDER")
+    void providerCannotOpenActivityOfOther() throws Exception {
+        Long id = activityRepo.findByBusinessProviderEmailOrderByNameAsc("prestador@demo.uy").get(0).getId();
+
+        mvc.perform(get("/provider/activities/" + id))
+                .andExpect(view().name("error/not-found"));
+    }
+
+    @Test
+    @WithMockUser(username = "pendiente@demo.uy", roles = "PROVIDER")
+    void pendingProviderCannotCreateActivities() throws Exception {
+        mvc.perform(get("/provider/activities/new"))
+                .andExpect(redirectedUrl("/provider"))
+                .andExpect(flash().attributeExists("error"));
+    }
+
+    @Test
+    @WithMockUser(username = "prestador@demo.uy", roles = "PROVIDER")
+    void providerAddsInstanceFromForm() throws Exception {
+        Long id = activityRepo.findByBusinessProviderEmailOrderByNameAsc("prestador@demo.uy").get(0).getId();
+
+        mvc.perform(post("/provider/activities/" + id + "/instances").with(csrf())
+                        .param("start", "2099-01-15T10:00")
+                        .param("maxCapacity", "8"))
+                .andExpect(redirectedUrl("/provider/activities/" + id))
+                .andExpect(flash().attribute("message", "Fecha agregada."));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@uymnatural.uy", roles = "ADMIN")
+    void adminCatalogPagesRender() throws Exception {
+        mvc.perform(get("/admin/activity-types")).andExpect(status().isOk());
+        mvc.perform(get("/admin/equipment")).andExpect(status().isOk());
+    }
+}
