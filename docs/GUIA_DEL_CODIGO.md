@@ -206,7 +206,7 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - Es un `CommandLineRunner`: Spring lo ejecuta una vez, apenas termina de arrancar.
 - Crea las cuentas de prueba del README: un administrador, una turista, un prestador aprobado y uno pendiente.
 - Si ya hay usuarios en la base, no hace nada. Así no se duplica nada cuando la base no se borra (`ddl-auto=update`).
-- La contraseña de las cuentas sale de `app.demo-password` (variable `DEMO_PASSWORD` del `.env`, por defecto `demo1234`).
+- La contraseña de las cuentas sale de `app.demo-password` (variable `DEMO_PASSWORD` del `.env`, por defecto `demo1234`). Si alguien la deja vacía (`DEMO_PASSWORD=`), la app no arranca: si no, las cuentas quedarían sin contraseña (prueba `emptyDemoPasswordStopsTheApp`).
 - La prueba `DemoDataTest` simula un segundo arranque y comprueba que no se duplique nada.
 
 ## 2.5 API REST del registro de prestadores

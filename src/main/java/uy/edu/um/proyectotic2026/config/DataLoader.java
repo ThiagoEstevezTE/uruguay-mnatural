@@ -67,6 +67,10 @@ public class DataLoader implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
 
+        // DEMO_PASSWORD= vacia en el .env dejaria las cuentas sin contraseña: mejor que la app no arranque
+        if (demoPassword == null || demoPassword.isBlank())
+            throw new IllegalStateException("DEMO_PASSWORD no puede estar vacía: borrala del .env o poné una contraseña");
+
         // Si ya hay usuarios, la base ya tiene datos: no se carga nada de nuevo
         if (userRepo.count() > 0)
             return;
