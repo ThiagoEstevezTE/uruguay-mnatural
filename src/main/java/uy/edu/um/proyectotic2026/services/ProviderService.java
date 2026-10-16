@@ -70,7 +70,7 @@ public class ProviderService {
         Business business = Business.builder()
                 .name(dto.getBusinessName().trim())
                 .description(dto.getBusinessDescription())
-                .address(dto.getBusinessAddress())
+                .address(dto.getBusinessAddress().trim())
                 .phone(dto.getBusinessPhone())
                 .email(dto.getBusinessEmail())
                 .locality(locality)
@@ -88,6 +88,11 @@ public class ProviderService {
         if (!providerRepo.existsById(providerId))
             throw new EntityNotFoundException("Prestador no encontrado");
         return businessRepo.findByProviderId(providerId);
+    }
+
+    public Provider getByEmail(String email) throws EntityNotFoundException {
+        return providerRepo.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("Prestador no encontrado"));
     }
 
     private void validate(ProviderRegistrationDTO dto) throws InvalidDataException {
@@ -110,7 +115,4 @@ public class ProviderService {
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
     }
-
-
-
 }

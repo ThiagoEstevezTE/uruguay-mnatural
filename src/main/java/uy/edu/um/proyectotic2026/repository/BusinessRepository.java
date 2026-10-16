@@ -11,4 +11,10 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
     List<Business> findByProviderId(Long providerId);
 
     List<Business> findByStatus(BusinessStatus status);
+
+    List<Business> findByStatusOrderByRequestDateAsc(BusinessStatus status);
+
+    List<Business> findAllByOrderByRequestDateDesc();
+
+    long countByStatus(BusinessStatus status);
 }
