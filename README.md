@@ -13,7 +13,7 @@ Se hace una sola vez:
    - **Docker Desktop** (https://www.docker.com/products/docker-desktop/). Trae la base de datos lista, así no hay que instalar PostgreSQL ni configurar nada.
    - **IntelliJ IDEA.** Si te pide el JDK, elegí *Download JDK* → versión **25**.
 2. **Aceptá la invitación** al repositorio que te llega por mail desde GitHub.
-3. **Bajá el proyecto.** En IntelliJ: **File → New → Project from Version Control**, pegá la dirección del repositorio y tocá **Clone**.
+3. **Bajá el proyecto.** En IntelliJ: **File → New → Project from Version Control**, pegá `https://github.com/ThiagoEstevezTE/uruguay-mnatural.git` y tocá **Clone**.
 
 Cada vez que quieras usar la app:
 
