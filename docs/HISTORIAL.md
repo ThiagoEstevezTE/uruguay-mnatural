@@ -189,3 +189,39 @@ Detalle de EMPRENDIMIENTO → `Business`:
 - **Frontend: Thymeleaf o React.** Se agregó Thymeleaf porque es lo que muestran los ejemplos de Moodle, y Claude le preguntó a Lorenzo si el equipo ya lo había decidido. **No hubo confirmación del equipo.**
 - **Base de datos final:** PostgreSQL o MySQL. La letra permite cualquiera de las dos.
 - **Repositorio Git del equipo:** desconocido.
+
+
+---
+
+## 7. Continuación (Thiago, desde el 16/10/2026)
+
+El proyecto pasó a la Mac de Thiago, en `~/ProyectoTIC`, con repositorio Git local. Se avanzó en tandas, cada una con sus tests y su commit (ver `git log`). **El detalle de todo lo nuevo está en `docs/GUIA_DEL_CODIGO.md`.**
+
+### Decisiones que estaban abiertas
+
+| Decisión | Qué se eligió | Por qué |
+|---|---|---|
+| Frontend | **Thymeleaf** + Bootstrap (servido desde el proyecto) | Es lo de los ejemplos del curso; queda una sola app y no hace falta un segundo proyecto. |
+| Base de datos | **PostgreSQL**: Supabase (cuenta del equipo) o un Postgres local | Lo permite la letra. Supabase es PostgreSQL con un panel web, y es más fácil de compartir con el equipo. Los tests usan H2. |
+| Repositorio | Git local; después se sube al repositorio privado del equipo | — |
+
+### Cambios a lo que había
+
+- `ProviderRestController`: se completó con el código del Paso 6 de `PLAN.md`, y se agregaron sus tests.
+- `ProviderService`: `businessAddress` ahora tiene `.trim()` (era uno de los detalles menores), y se agregó `getByEmail`.
+- `spring-security-crypto` se reemplazó por `spring-boot-starter-security`, que la incluye y además da el login.
+- `data.sql`: las localidades ahora tienen latitud y longitud, para el pronóstico del clima.
+- `application.properties`: PostgreSQL con los datos de conexión en `.env`. Ver el README.
+
+### Lo que se agregó
+
+- Login con roles (turista, prestador y administrador).
+- Registro de turistas y prestadores desde formularios.
+- Bandeja del administrador para aprobar o rechazar emprendimientos.
+- Actividades, fechas, tipos y equipamiento (con su ABM).
+- Portal público con buscador.
+- Reservas y pagos con un servicio externo simulado.
+- QR y registro de asistencia.
+- Valoraciones.
+- API pública de la letra, documentada con Swagger.
+- Pronóstico del clima.

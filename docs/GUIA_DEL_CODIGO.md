@@ -450,3 +450,75 @@ La letra pide que el sistema exponga una API con 5 operaciones:
   - `@JsonProperty("weather_code")` conecta el nombre del JSON con el del campo Java;
   - `@JsonIgnoreProperties(ignoreUnknown = true)` ignora los datos que no se usan.
 - **El código de clima** viene en el estándar WMO: 0 = despejado, 61 = lluvia, 95 = tormenta, etc. `toWeather` lo traduce a texto y a un ícono.
+
+---
+
+# Parte 3: para la defensa
+
+## 3.1 Mapa del proyecto
+
+```
+src/main/java/uy/edu/um/proyectotic2026/
+├── config/        SecurityConfig (permisos y login) · DataLoader (datos de ejemplo)
+├── entities/      Las tablas del MER: User, Tourist, Provider, Administrator, Business,
+│                  Department, Locality, Activity, ActivityInstance, ActivityType,
+│                  Equipment, ActivityEquipment, Booking, Payment, Rating + los enums de estados
+├── repository/    Un JpaRepository por entidad
+├── services/      Las reglas del negocio (una clase por tema)
+├── controllers/   Web (@Controller) y API (@RestController)
+├── dto/           Datos de formularios, de la API y de servicios externos
+├── exceptions/    InvalidDataException, EntityNotFoundException, PaymentUnavailableException
+└── simulator/     El simulador del servicio de pagos externo (solo para la demo)
+
+src/main/resources/
+├── application.properties   Configuración (base, pagos, clima, Swagger)
+├── data.sql                 Departamentos y localidades (con coordenadas)
+├── templates/               Las páginas (Thymeleaf)
+└── static/                  CSS e imágenes
+```
+
+## 3.2 Qué hace cada service
+
+| Service | Responsable de |
+|---|---|
+| `ProviderService` | Registro de prestadores con su emprendimiento (Lorenzo) |
+| `TouristService` | Registro de turistas |
+| `LoginService` | Buscar al usuario cuando inicia sesión |
+| `BusinessService` | Bandeja del administrador: aprobar o rechazar emprendimientos |
+| `ActivityService` | Actividades y fechas del prestador |
+| `ActivityTypeService`, `EquipmentService` | ABM del administrador |
+| `LocationService` | Departamentos y localidades para los desplegables |
+| `PortalService` | Lo público: buscador, portada, detalle y consultas de la API |
+| `BookingService` | Reservas, pagos, cancelaciones, vencimiento y asistencia |
+| `PaymentGatewayClient` | Hablar con el servicio de pagos externo |
+| `RatingService` | Valoraciones y promedios |
+| `QrCodeService` | Imagen del QR |
+| `WeatherService` | Pronóstico del clima |
+
+## 3.3 Preguntas probables y respuesta corta
+
+- **¿Dónde está el MVC?** El Model son las entidades y los services; las View, las plantillas Thymeleaf; los Controller, el paquete `controllers`. Además está en capas: Controller → Service → Repository (ver 1.1).
+- **¿Por qué DTOs?** Para no exponer datos sensibles, como el hash de la contraseña. También evitan bucles infinitos al pasar a JSON y separan lo que entra por un formulario de lo que se guarda (ver 2.5).
+- **¿Cómo se guardan las contraseñas?** Con BCrypt, un hash de una sola vía. Ni nosotros podemos verlas (ver 1.10).
+- **¿Cómo evitan que un prestador edite la actividad de otro?** El service siempre controla que lo que se pide sea del usuario logueado (`getActivityOfProvider`, `getBookingOfTourist`). Si no es suyo, responde "no encontrado".
+- **¿Qué pasa si el servicio de pagos se cae?** La reserva queda pendiente, el intento se guarda con estado ERROR y se le pide al turista que reintente. Nunca se confirma sin pago aprobado (ver 2.12).
+- **¿Cómo se cancelan solas las reservas vencidas?** Con `@Scheduled`: un método que Spring ejecuta cada minuto (ver 2.11).
+- **¿Cómo manejan el cupo si el acta dice que no hay?** Es opcional por fecha. Si el prestador no lo pone, no hay límite. Quedó así porque el acta dice que se va a volver a consultar.
+- **¿Qué es `@Transactional`?** Que todo lo que hace el método se guarda junto o no se guarda nada. Por ejemplo, el prestador y su emprendimiento se crean juntos.
+- **¿Qué es la inyección de dependencias?** Spring crea los objetos (services, repositorios) y los pasa donde dice `@Autowired`. Así ninguna clase hace `new` de sus dependencias, y en los tests se pueden reemplazar por mocks.
+- **¿Cómo prueban?** Hay más de 100 tests:
+  - unitarios con Mockito (services solos, con repositorios falsos);
+  - de integración con `@SpringBootTest` y MockMvc (la app entera con H2).
+
+  El servicio de pagos se reemplaza por un mock (`@MockitoBean`) para probar los tres casos: aprobado, rechazado y caído.
+- **¿Por qué H2 en los tests y PostgreSQL en la app?** Los tests tienen que poder correr en cualquier máquina sin instalar nada. La app usa PostgreSQL, que es lo que pide la letra (local o en Supabase).
+
+## 3.4 Qué quedó afuera y por qué
+
+| Tema | Estado |
+|---|---|
+| **Reembolsos** (REEMBOLSO y MOTIVO_CANCELACION del MER) | El Acta 1 (punto 4.6) dice que los motivos y porcentajes "quedan pendientes de definir con el cliente". Hay que preguntarlos en la próxima reunión. |
+| **Guardar el medio de pago del turista** (MEDIO_PAGO) | Está acordado en el acta (4.1), pero no es necesario para reservar. Es la próxima mejora. |
+| **Imágenes de las actividades** (IMAGEN_ACTIVIDAD) | Por ahora cada actividad muestra una portada de color según su tipo. Falta poder subir fotos. |
+| **Mail de confirmación** | Se muestra en pantalla. Mandarlo de verdad necesita un servidor de correo (por ejemplo `spring-boot-starter-mail`). |
+| **Escanear el QR con la cámara** | El QR se genera. El prestador escribe el código; leerlo con la cámara del celular sería una mejora. |

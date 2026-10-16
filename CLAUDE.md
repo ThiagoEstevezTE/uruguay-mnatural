@@ -6,6 +6,7 @@ Plataforma que conecta turistas con prestadores de actividades turísticas en Ur
 
 Antes de proponer cambios, leé:
 - `docs/HISTORIAL.md`: qué se hizo, decisiones tomadas, equivalencia MER → código y estado actual.
+- `docs/GUIA_DEL_CODIGO.md`: cómo funciona cada parte del código.
 - `docs/PLAN.md`: qué falta y cómo se pensaba seguir.
 - `docs/requerimientos/*.txt`: letra del proyecto y actas con el cliente. Los PDF originales están al lado.
 - `docs/diagramas/`: MER y modelo relacional.
@@ -26,10 +27,17 @@ Antes de proponer cambios, leé:
 ## Stack
 
 - Spring Boot 4.1.1, Java 25 y Maven Wrapper.
-- H2 en memoria por ahora: consola en `/h2-console`, URL `jdbc:h2:mem:uymnatural`, usuario `sa`, sin contraseña.
-- Thymeleaf, Lombok y `spring-security-crypto` (solo BCrypt).
+- PostgreSQL (Supabase o local). La conexión va en `.env` (copiar de `.env.example`). Los tests usan H2 en memoria.
+- Thymeleaf + Bootstrap (webjars), Spring Security (login por roles, BCrypt), Lombok, springdoc (Swagger) y ZXing (QR).
+- Servicios externos: pagos (simulador en `simulator/`, llamado por HTTP) y clima (Open-Meteo).
 
 ## Comandos
 
-- Tests: `mvnw.cmd test` (Windows) o `./mvnw test`. Requiere `JAVA_HOME` apuntando a un JDK 25.
-- Correr la app: `mvnw.cmd spring-boot:run`, o desde IntelliJ con `Proyectotic2026Application`.
+- Tests: `./mvnw test`. Requiere `JAVA_HOME` apuntando a un JDK 25.
+- Correr la app: `./mvnw spring-boot:run`, o desde IntelliJ con `Proyectotic2026Application`. Se abre en http://localhost:8080.
+- Documentación de la API: http://localhost:8080/swagger-ui.html
+
+## Documentos
+
+- `docs/GUIA_DEL_CODIGO.md`: explicación de todo el código, sección por sección. Actualizarla con cada cambio.
+- `docs/GUION_DEMO.md`: recorrido para mostrar el sistema.
