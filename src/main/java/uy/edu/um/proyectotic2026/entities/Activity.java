@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -91,6 +92,21 @@ public class Activity {
     public void addInstance(ActivityInstance instance) {
         instance.setActivity(this);
         instances.add(instance);
+    }
+
+    // Fechas en las que todavia se puede reservar: programadas y antes del cierre de reservas.
+    // "instances" ya viene ordenada por fecha (@OrderBy).
+    public List<ActivityInstance> getUpcomingInstances() {
+        LocalDateTime now = LocalDateTime.now();
+        return instances.stream()
+                .filter(i -> i.getStatus() == InstanceStatus.SCHEDULED)
+                .filter(i -> i.getBookingDeadline().isAfter(now))
+                .toList();
+    }
+
+    // Nombres de los tipos en orden alfabetico (para mostrar etiquetas)
+    public List<String> getTypeNames() {
+        return types.stream().map(ActivityType::getName).sorted().toList();
     }
 
     // Duracion para mostrar: "3 h", "1 h 30 min", "45 min"

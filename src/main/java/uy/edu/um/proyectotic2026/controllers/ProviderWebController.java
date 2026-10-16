@@ -2,6 +2,7 @@ package uy.edu.um.proyectotic2026.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -140,6 +141,7 @@ public class ProviderWebController {
     // Si el service tira EntityNotFoundException (por ejemplo, una actividad de otro prestador),
     // se muestra la pagina de error con el mensaje
     @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public String notFound(EntityNotFoundException e, Model model) {
         model.addAttribute("error", e.getMessage());
         return "error/not-found";
