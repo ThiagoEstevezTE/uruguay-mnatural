@@ -7,6 +7,8 @@ TeroBytes es la empresa de Patricio Saravia, Lorenzo Gianola, Federico Dolivo y 
 
 ## Bajarlo de GitHub y correrlo (para el equipo)
 
+**Guía completa, con cada paso y qué hacer si algo falla: [`docs/COMO_CORRERLO.md`](docs/COMO_CORRERLO.md).** Lo de abajo es el resumen.
+
 Se hace una sola vez:
 
 1. **Instalá dos cosas:**
@@ -97,6 +99,7 @@ Los tests usan H2 en memoria, así que no necesitan Postgres.
 
 ## Documentación
 
+- [`docs/COMO_CORRERLO.md`](docs/COMO_CORRERLO.md): cómo bajar el proyecto y hacerlo andar en tu compu, paso a paso.
 - [`docs/GUIA_DE_USO.md`](docs/GUIA_DE_USO.md): cómo se usa cada función de la página, paso a paso y con capturas.
 - [`docs/GUION_DEMO.md`](docs/GUION_DEMO.md): el recorrido de la presentación y cómo prepararla.
 - `docs/manuales/`: manuales de usuario para turistas, prestadores y administradores.
