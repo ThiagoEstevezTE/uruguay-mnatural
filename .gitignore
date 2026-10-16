@@ -37,3 +37,4 @@ build/
 
 ### Claude Code local ###
 .claude/
+.env.local
