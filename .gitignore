@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Datos de conexion locales ###
+.env
+
+### Claude Code local ###
+.claude/

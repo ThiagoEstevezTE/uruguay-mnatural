@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Inicio')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<section class="hero">
+    <div class="container">
+        <h1>Descubrí Uruguay, actividad por actividad</h1>
+        <p class="lead mb-0">Cabalgatas, trekking, gastronomía, turismo náutico y mucho más, en todo el país.</p>
+    </div>
+</section>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: messages}"></div>
+    <div th:if="${param.logout}" class="alert alert-success">Cerraste sesión.</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

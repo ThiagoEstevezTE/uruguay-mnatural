@@ -1,0 +1,184 @@
+/* Estilos propios de Uruguay Mnatural, por encima de Bootstrap */
+
+:root {
+    --um-green: #24584a;
+    --um-green-dark: #183d33;
+    --um-sand: #f6f2ea;
+    --um-accent: #d9773f;
+    --um-accent-dark: #b85f2c;
+    --um-text: #1f2a27;
+
+    --bs-primary: var(--um-green);
+    --bs-primary-rgb: 36, 88, 74;
+    --bs-body-color: var(--um-text);
+    --bs-body-bg: var(--um-sand);
+    --bs-link-color: var(--um-green);
+    --bs-link-hover-color: var(--um-green-dark);
+    --bs-border-radius: .6rem;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Botones */
+.btn-primary {
+    --bs-btn-bg: var(--um-green);
+    --bs-btn-border-color: var(--um-green);
+    --bs-btn-hover-bg: var(--um-green-dark);
+    --bs-btn-hover-border-color: var(--um-green-dark);
+    --bs-btn-active-bg: var(--um-green-dark);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--um-green);
+    --bs-btn-border-color: var(--um-green);
+    --bs-btn-hover-bg: var(--um-green);
+    --bs-btn-hover-border-color: var(--um-green);
+}
+
+.btn-accent {
+    background: var(--um-accent);
+    border-color: var(--um-accent);
+    color: #fff;
+}
+
+.btn-accent:hover {
+    background: var(--um-accent-dark);
+    border-color: var(--um-accent-dark);
+    color: #fff;
+}
+
+/* Barra de navegacion */
+.navbar-um {
+    background: var(--um-green-dark);
+}
+
+.navbar-um .navbar-brand,
+.navbar-um .nav-link,
+.navbar-um .navbar-text {
+    color: #fff;
+}
+
+.navbar-um .nav-link:hover {
+    color: #ffd9c2;
+}
+
+.navbar-um .navbar-brand {
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+
+.navbar-um .navbar-brand span {
+    color: #ffb48a;
+}
+
+.navbar-um .navbar-toggler {
+    border-color: rgba(255, 255, 255, .4);
+}
+
+.navbar-um .navbar-toggler-icon {
+    filter: invert(1);
+}
+
+/* Portada */
+.hero {
+    background: linear-gradient(135deg, rgba(24, 61, 51, .92), rgba(36, 88, 74, .78)),
+                url("/img/hero.svg") center / cover no-repeat;
+    color: #fff;
+    padding: 4.5rem 0 3.5rem;
+}
+
+.hero h1 {
+    font-weight: 800;
+    font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.hero .search-box {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+}
+
+/* Tarjetas */
+.card-um {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(31, 42, 39, .08);
+    background: #fff;
+}
+
+.activity-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+    height: 100%;
+}
+
+.activity-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(31, 42, 39, .14);
+}
+
+.activity-cover {
+    height: 170px;
+    border-radius: 1rem 1rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: rgba(255, 255, 255, .9);
+    background: linear-gradient(135deg, var(--um-green), #4f8a6f);
+    background-size: cover;
+    background-position: center;
+}
+
+.price {
+    font-weight: 700;
+    color: var(--um-green-dark);
+}
+
+.badge-type {
+    background: #e7efe9;
+    color: var(--um-green-dark);
+    font-weight: 600;
+}
+
+.stars {
+    color: #e0a526;
+}
+
+/* Paneles de prestador y administrador */
+.panel-header {
+    background: #fff;
+    border-bottom: 1px solid #e6e1d6;
+    padding: 1.5rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.stat {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--um-green);
+}
+
+.table-um {
+    background: #fff;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.table-um thead {
+    background: #eef3ef;
+}
+
+/* Pie de pagina */
+.footer-um {
+    background: var(--um-green-dark);
+    color: rgba(255, 255, 255, .85);
+}
