@@ -355,7 +355,7 @@ Detalle de la actividad → elige fecha → /tourist/book/{fecha}
 | La reserva queda PENDIENTE y vence en 2 horas, o al cierre de reservas de esa fecha si es antes | Acta 1, punto 4.8 |
 
 - **Lugares ocupados (`getTakenPlaces`):** cuentan las reservas confirmadas, las realizadas y las pendientes que todavía no vencieron. Por eso una reserva pendiente "retiene el lugar", como dice el acta.
-- **No se vende de más** ⭐: `createBooking` bloquea la fecha con `findLockedById` (`SELECT ... FOR UPDATE`) antes de contar los lugares. Si dos turistas reservan el último lugar a la vez, el segundo espera, cuenta de nuevo y recibe "No quedan lugares". Lo prueba `BookingConcurrencyTest`.
+- **No se vende de más** ⭐: `createBooking` bloquea la fecha con `findLockedById` (`SELECT ... FOR UPDATE`) y sobre esa misma fecha bloqueada hace los controles de la tabla (`checkCanBook`, el mismo que usa `getInstanceToBook` para mostrar la pantalla) antes de contar los lugares. Si dos turistas reservan el último lugar a la vez, el segundo espera, cuenta de nuevo y recibe "No quedan lugares". Lo prueba `BookingConcurrencyTest`.
 - **Número de reserva:** `UM-` seguido de 6 caracteres al azar (`SecureRandom`). No usa letras que se confunden (O/0, I/1) y se verifica que no esté repetido.
 - **Estados** (Acta 1, punto 4.8): `PENDING` → `CONFIRMED` → `COMPLETED`, o `CANCELLED` en cualquier momento antes. `cancelledBy` guarda quién canceló: el turista, el prestador o el sistema.
 
@@ -513,7 +513,7 @@ src/main/resources/
 - **¿Dónde está el MVC?** El Model son las entidades y los services; las View, las plantillas Thymeleaf; los Controller, el paquete `controllers`. Además está en capas: Controller → Service → Repository (ver 1.1).
 - **¿Por qué DTOs?** Para no exponer datos sensibles, como el hash de la contraseña. También evitan bucles infinitos al pasar a JSON y separan lo que entra por un formulario de lo que se guarda (ver 2.5).
 - **¿Cómo se guardan las contraseñas?** Con BCrypt, un hash de una sola vía. Ni nosotros podemos verlas (ver 1.10).
-- **¿Cómo evitan que un prestador edite la actividad de otro?** El service siempre controla que lo que se pide sea del usuario logueado (`getActivityOfProvider`, `getBookingOfTourist`). Si no es suyo, responde "no encontrado".
+- **¿Cómo evitan que un prestador edite la actividad de otro?** El service siempre controla que lo que se pide sea del usuario logueado (`getActivityOfProvider`, y en reservas `checkOwner`, que usan tanto `getBookingOfTourist` como `payBooking`). Si no es suyo, responde "no encontrado".
 - **¿Qué pasa si el servicio de pagos se cae?** La reserva queda pendiente, el intento se guarda con estado ERROR y se le pide al turista que reintente. Nunca se confirma sin pago aprobado (ver 2.12).
 - **¿Qué pasa si alguien hace doble clic en "Pagar"?** Se bloquea la reserva mientras se paga (`SELECT ... FOR UPDATE`): el segundo pedido espera y encuentra la reserva ya confirmada. Se cobra una sola vez (ver 2.12).
 - **¿Cómo se cancelan solas las reservas vencidas?** Con `@Scheduled`: un método que Spring ejecuta cada minuto (ver 2.11).

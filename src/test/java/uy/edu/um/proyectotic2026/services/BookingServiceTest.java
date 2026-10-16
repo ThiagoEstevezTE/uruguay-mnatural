@@ -116,6 +116,15 @@ class BookingServiceTest {
     }
 
     @Test
+    void cannotBookACancelledDate() {
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+        instance.setStatus(InstanceStatus.CANCELLED);
+
+        assertThrows(InvalidDataException.class,
+                () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null));
+    }
+
+    @Test
     void bookingExpiresWhenBookingsCloseIfThatIsBefore2Hours() throws Exception {
         // Empieza en 2 h 30 min y cierra las reservas 2 horas antes: hay 30 minutos para pagar, no 2 horas
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusMinutes(150), null);
@@ -194,6 +203,15 @@ class BookingServiceTest {
         Booking booking = newBooking();
         assertThrows(EntityNotFoundException.class,
                 () -> bookingService.getBookingOfTourist(booking.getId(), "lucia@demo.uy"));
+    }
+
+    @Test
+    void otherTouristCannotPayTheBooking() throws Exception {
+        Booking booking = newBooking();
+
+        assertThrows(EntityNotFoundException.class,
+                () -> bookingService.payBooking(booking.getId(), "lucia@demo.uy", "4242424242424242"));
+        verify(paymentGateway, never()).charge(anyString(), any(), anyString());
     }
 
     // ---------- Cancelar ----------

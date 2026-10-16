@@ -52,7 +52,12 @@ public class BookingService {
     public ActivityInstance getInstanceToBook(Long instanceId) throws EntityNotFoundException, InvalidDataException {
         ActivityInstance instance = instanceRepo.findById(instanceId)
                 .orElseThrow(() -> new EntityNotFoundException("Fecha no encontrada"));
+        checkCanBook(instance);
+        return instance;
+    }
 
+    // Controles para reservar una fecha: publicada, de un emprendimiento aprobado, no cancelada y sin cerrar
+    private void checkCanBook(ActivityInstance instance) throws EntityNotFoundException, InvalidDataException {
         Activity activity = instance.getActivity();
         if (!activity.isPublished() || activity.getBusiness().getStatus() != BusinessStatus.APPROVED)
             throw new EntityNotFoundException("Fecha no encontrada");
@@ -63,18 +68,16 @@ public class BookingService {
         // Limite para reservar: hora de inicio menos los minutos que fijo el prestador
         if (!LocalDateTime.now().isBefore(instance.getBookingDeadline()))
             throw new InvalidDataException("Las reservas para esta fecha ya cerraron");
-
-        return instance;
     }
 
     @Transactional
     public Booking createBooking(Long instanceId, String touristEmail, Integer participants, String observations)
             throws EntityNotFoundException, InvalidDataException {
 
-        // Se bloquea la fecha mientras se controla el cupo: dos reservas a la vez no pueden pasarse.
-        // Despues getInstanceToBook recibe esta misma fecha ya bloqueada.
-        instanceRepo.findLockedById(instanceId);
-        ActivityInstance instance = getInstanceToBook(instanceId);
+        // Se bloquea la fecha mientras se controla el cupo: dos reservas a la vez no pueden pasarse
+        ActivityInstance instance = instanceRepo.findLockedById(instanceId)
+                .orElseThrow(() -> new EntityNotFoundException("Fecha no encontrada"));
+        checkCanBook(instance);
         Activity activity = instance.getActivity();
         Tourist tourist = touristRepo.findByEmail(touristEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Turista no encontrado"));
@@ -144,8 +147,7 @@ public class BookingService {
         // El segundo pedido espera, y cuando sigue la reserva ya esta confirmada.
         Booking booking = bookingRepo.findLockedById(bookingId)
                 .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
-        if (!booking.getTourist().getEmail().equals(touristEmail))
-            throw new EntityNotFoundException("Reserva no encontrada");
+        checkOwner(booking, touristEmail);
 
         if (booking.getStatus() != BookingStatus.PENDING)
             throw new InvalidDataException("Esta reserva no está pendiente de pago");
@@ -209,9 +211,13 @@ public class BookingService {
     public Booking getBookingOfTourist(Long bookingId, String touristEmail) throws EntityNotFoundException {
         Booking booking = bookingRepo.findById(bookingId)
                 .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+        checkOwner(booking, touristEmail);
+        return booking;
+    }
+
+    private void checkOwner(Booking booking, String touristEmail) throws EntityNotFoundException {
         if (!booking.getTourist().getEmail().equals(touristEmail))
             throw new EntityNotFoundException("Reserva no encontrada");
-        return booking;
     }
 
     public List<Booking> getBookingsOfProvider(String providerEmail) {
