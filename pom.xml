@@ -75,6 +75,12 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
+		<!-- Documentacion de la API REST (Swagger UI en /swagger-ui.html) -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.1.1</version>
+		</dependency>
 		<!-- ZXing: genera el codigo QR de cada reserva -->
 		<dependency>
 			<groupId>com.google.zxing</groupId>

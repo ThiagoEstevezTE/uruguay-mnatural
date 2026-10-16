@@ -1,5 +1,7 @@
 package uy.edu.um.proyectotic2026.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +18,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/provider")
+@Tag(name = "Prestadores", description = "Registro de prestadores y sus emprendimientos")
 public class ProviderRestController {
 
     @Autowired
     private ProviderService providerService;
 
     @PostMapping("/register")
+    @Operation(summary = "Registrar un prestador con su emprendimiento", description = "El emprendimiento queda pendiente de aprobación")
     public ResponseEntity<?> register(@RequestBody ProviderRegistrationDTO dto) {
         try {
             Provider provider = providerService.registerProvider(dto);
@@ -34,6 +38,7 @@ public class ProviderRestController {
     }
 
     @GetMapping("/{id}/businesses")
+    @Operation(summary = "Emprendimientos de un prestador")
     public ResponseEntity<?> getBusinesses(@PathVariable("id") Long id) {
         try {
             List<BusinessResponseDTO> businesses = providerService.getBusinessesByProvider(id).stream()

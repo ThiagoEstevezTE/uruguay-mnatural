@@ -98,6 +98,15 @@
                         <span>
                             <span class="fw-semibold text-capitalize" th:text="${#temporals.format(instance.startDateTime, 'EEE dd/MM')}"></span>
                             <span class="text-muted" th:text="${#temporals.format(instance.startDateTime, 'HH:mm')}"></span>
+                            <!-- Pronostico del dia, si lo hay -->
+                            <th:block th:with="w=${weather.get(instance.startDateTime.toLocalDate())}">
+                                <span class="d-block small text-muted" th:if="${w}" th:title="${w.description}">
+                                    <i th:class="${'bi ' + w.icon}"></i>
+                                    <span th:text="${w.maxTemperature + '° / ' + w.minTemperature + '°'}"></span>
+                                    <span th:if="${w.rainProbability != null and w.rainProbability >= 30}"
+                                          th:text="${' · ' + w.rainProbability + '% lluvia'}"></span>
+                                </span>
+                            </th:block>
                         </span>
                         <span class="btn btn-sm btn-accent">Reservar</span>
                     </a>

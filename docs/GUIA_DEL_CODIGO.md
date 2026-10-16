@@ -419,3 +419,34 @@ BookingService.payBooking
   - todavía no la valoró (Acta 1, punto 4.9).
 - **Una valoración por reserva:** `@OneToOne` con `unique = true`.
 - **Son públicas:** el detalle de la actividad muestra el promedio con estrellas y los comentarios, como pide la letra.
+
+## 2.15 API pública para otras plataformas ⭐
+
+**Archivos:** `controllers/PublicApiRestController`, `dto/ActivitySummaryDTO` y `dto/BusinessVerificationDTO`.
+
+La letra pide que el sistema exponga una API con 5 operaciones:
+
+| Operación (letra) | Endpoint |
+|---|---|
+| Listado de todos los emprendimientos | `GET /api/v1/businesses` (solo los aprobados) |
+| Actividades de un día por departamento o localidad | `GET /api/v1/activities?date=2026-10-20&departmentId=14` (o `&localityId=22`) |
+| Top 3 mejor puntuadas del mes por departamento | `GET /api/v1/activities/top?departmentId=14&month=2026-10` |
+| Verificar emprendimiento | `GET /api/v1/businesses/{id}/verify`: devuelve `verified: true` si está aprobado |
+| Buscar actividad por palabra clave | `GET /api/v1/activities/search?keyword=kayak` |
+
+- **Documentación:** con la app corriendo, en **http://localhost:8080/swagger-ui.html**. Swagger la genera sola a partir del código (librería `springdoc-openapi`). Las anotaciones `@Tag`, `@Operation` y `@Parameter` agregan las descripciones. Desde esa página se puede probar cada endpoint, y cumple el punto de la letra "API REST con detalle de endpoints y su documentación".
+- **Top 3 del mes:** se promedian solo las valoraciones hechas en ese mes. Si no se indica el mes, se usa el actual.
+- **Devuelve DTOs, como el resto de la API:** nunca se exponen las entidades.
+
+## 2.16 Clima
+
+**Archivos:** `services/WeatherService`, `dto/OpenMeteoResponseDTO` y `dto/WeatherDTO`.
+
+- **La letra dice que "sería conveniente"** mostrar el pronóstico para la fecha y el lugar de la actividad.
+- **Usa Open-Meteo**, una API pública, gratis y sin clave. Para eso, cada localidad tiene latitud y longitud (están en `data.sql`).
+- **Hace una sola consulta por actividad**, con el rango de fechas, y reparte el resultado en cada fecha. Open-Meteo da pronóstico para unos 15 días; las fechas más lejanas se muestran sin clima.
+- **Si no hay internet o la API falla,** la página se muestra igual, sin el clima, y queda un aviso en el log. Es el mismo criterio que pide la letra para los servicios externos: que una falla de afuera no rompa el sistema.
+- **`OpenMeteoResponseDTO`:**
+  - `@JsonProperty("weather_code")` conecta el nombre del JSON con el del campo Java;
+  - `@JsonIgnoreProperties(ignoreUnknown = true)` ignora los datos que no se usan.
+- **El código de clima** viene en el estándar WMO: 0 = despejado, 61 = lluvia, 95 = tormenta, etc. `toWeather` lo traduce a texto y a un ícono.
