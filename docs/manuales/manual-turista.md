@@ -154,7 +154,7 @@ El pago lo procesa un servicio de pagos externo. Uruguay Mnatural **no guarda lo
 
 ![Reserva confirmada con su código QR y el historial de pagos](img/turista-15-reserva-confirmada.png)
 
-**El pago se rechaza.** El sistema te avisa el motivo (por ejemplo, fondos insuficientes). La reserva sigue pendiente y tu lugar sigue guardado hasta que se cumplan las 2 horas: podés intentar con otra tarjeta.
+**El pago se rechaza.** El sistema te avisa el motivo (por ejemplo, fondos insuficientes). La reserva sigue pendiente y tu lugar sigue guardado hasta que venza el plazo para pagar: podés intentar con otra tarjeta.
 
 ![Aviso de pago rechazado](img/turista-13-pago-rechazado.png)
 
@@ -172,10 +172,10 @@ En el detalle de la reserva queda el **historial de todos tus intentos de pago**
 
    | Estado | Qué significa |
    |---|---|
-   | **Pendiente de pago** | Falta pagar. Tu lugar está guardado por 2 horas. |
+   | **Pendiente de pago** | Falta pagar. Tu lugar está guardado por 2 horas (o hasta que cierren las reservas de esa fecha, si es antes). |
    | **Confirmada** | Está pagada. |
    | **Realizada** | Ya participaste: el prestador registró tu asistencia. |
-   | **Cancelada** | Se canceló (por vos, por el prestador o porque pasaron 2 horas sin pagar). |
+   | **Cancelada** | Se canceló (por vos, por el prestador o porque venció el plazo para pagar). |
 
    ![Lista de Mis reservas](img/turista-16-mis-reservas.png)
 
@@ -247,7 +247,7 @@ Cuando termines, tocá **Salir** arriba a la derecha. Vas a volver a la portada 
 No. Se puede buscar y ver todo sin cuenta. Solo se pide para reservar.
 
 **¿Qué pasa si me olvido de pagar?**
-Tu lugar se guarda 2 horas. Después la reserva se cancela sola y el lugar queda libre para otros turistas.
+Tu lugar se guarda 2 horas, o hasta que cierren las reservas de esa fecha si es antes. Después la reserva se cancela sola y el lugar queda libre para otros turistas.
 
 **El pago no funcionó, ¿qué hago?**
 Si el pago se rechazó o el servicio de pagos no respondió, la reserva no se confirma y sigue como **Pendiente de pago**. Podés volver a intentarlo desde **Mis reservas → Pagar** mientras tu lugar siga guardado.

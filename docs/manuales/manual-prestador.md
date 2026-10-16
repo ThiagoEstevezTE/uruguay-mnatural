@@ -192,10 +192,10 @@ Tu panel va a mostrar la actividad nueva con sus fechas.
 
 | Estado | Qué significa |
 |---|---|
-| **Pendiente de pago** | El turista reservó pero todavía no pagó. Su lugar se guarda 2 horas. |
+| **Pendiente de pago** | El turista reservó pero todavía no pagó. Su lugar se guarda 2 horas, o hasta el cierre de reservas de esa fecha si es antes. |
 | **Confirmada** | El pago está aprobado. El turista tiene su código QR. |
 | **Realizada** | El turista fue y registraste su asistencia. |
-| **Cancelada** | La canceló el turista, la cancelaste vos (al cancelar una fecha) o pasaron 2 horas sin pagar. |
+| **Cancelada** | La canceló el turista, la cancelaste vos (al cancelar una fecha) o venció el plazo para pagar. |
 
 ---
 

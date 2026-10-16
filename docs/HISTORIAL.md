@@ -212,6 +212,7 @@ El proyecto pasó a la Mac de Thiago, en `~/ProyectoTIC`, con repositorio Git lo
 - `spring-security-crypto` se reemplazó por `spring-boot-starter-security`, que la incluye y además da el login.
 - `data.sql`: las localidades ahora tienen latitud y longitud, para el pronóstico del clima.
 - `application.properties`: PostgreSQL con los datos de conexión en `.env`. Ver el README.
+- Plazo para pagar (16/10): la reserva pendiente vence a las 2 horas o al cierre de reservas de la fecha, lo que pase antes. El acta habla de una vigencia **máxima** de 2 horas (punto 4.8), así que entra en la letra; queda anotado en `PLAN.md` para confirmarlo con el cliente.
 
 ### Lo que se agregó
 

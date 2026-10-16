@@ -362,7 +362,7 @@ Detalle de la actividad → elige fecha → /tourist/book/{fecha}
 **Vencimiento automático** ⭐:
 - `cancelExpiredBookings()` tiene `@Scheduled(fixedRate = 60000)`, así que Spring la ejecuta sola cada minuto.
 - Cancela las reservas pendientes que vencieron sin pagar y así libera los lugares.
-- **El plazo nunca pasa el cierre de reservas:** si la fecha cierra antes de las 2 horas, la reserva vence ahí. Si no, se podría pagar una actividad que ya empezó (prueba `bookingExpiresWhenBookingsCloseIfThatIsBefore2Hours`).
+- **El plazo nunca pasa el cierre de reservas:** si la fecha cierra antes de las 2 horas, la reserva vence ahí. Si no, se podría pagar una actividad que ya empezó (prueba `bookingExpiresWhenBookingsCloseIfThatIsBefore2Hours`). El acta habla de una vigencia **máxima** de 2 horas, así que entra en la letra; igual está anotado en `PLAN.md` para confirmarlo con el cliente.
 - Para que funcione, la clase principal tiene `@EnableScheduling`.
 
 **Cancelaciones:**
@@ -394,7 +394,7 @@ BookingService.payBooking
 | Qué pasa | Qué hace el sistema |
 |---|---|
 | **Aprobado** | El pago queda `APPROVED` y la reserva pasa a `CONFIRMED`. |
-| **Rechazado** (por ejemplo, sin fondos) | El pago queda `REJECTED`. La reserva **sigue pendiente**, y el turista puede probar otra tarjeta dentro de las 2 horas. |
+| **Rechazado** (por ejemplo, sin fondos) | El pago queda `REJECTED`. La reserva **sigue pendiente**, y el turista puede probar otra tarjeta mientras no venza el plazo para pagar. |
 | **El servicio no responde** (error 5xx, se cae la conexión o pasan más de 5 segundos) | El pago queda `ERROR`. La reserva **sigue pendiente** y se le pide al turista que reintente. **Nunca se confirma una reserva sin pago aprobado** (Acta 1, punto 4.7). |
 
 **Detalles que conviene saber explicar:**

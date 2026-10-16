@@ -188,3 +188,4 @@ Salen de las actas y de la letra. No hay diseño hecho.
 
 - **Cupos:** el acta dice que las actividades no manejan cupos, pero aclara que se volverá a consultar. Por eso el MER tiene `cupo_maximo`.
 - **Cancelaciones del prestador:** los motivos y el porcentaje de devolución de cada uno quedan pendientes de definir con el cliente.
+- **Plazo para pagar cerca del cierre de reservas:** el acta dice que la reserva pendiente dura como máximo 2 horas (punto 4.8). Si las reservas de la fecha cierran antes, el sistema hace vencer la reserva en ese momento, para que no se pueda pagar una actividad cerrada o que ya empezó. Entra en "como máximo", pero conviene confirmarlo con el cliente.
