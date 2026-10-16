@@ -2,6 +2,29 @@
 
 Un recorrido que muestra todas las funciones en orden lógico. Todas las cuentas usan la contraseña `demo1234`.
 
+## Cuentas para entrar
+
+La contraseña de **todas** es `demo1234`. Se entra desde "Ingresar", arriba a la derecha.
+
+| Rol | Usuario | Qué tiene |
+|---|---|---|
+| Administrador | `admin@uymnatural.uy` | Aprueba o rechaza emprendimientos y maneja los tipos de actividad y el equipamiento. |
+| Turista (la principal) | `turista@demo.uy` | Sofía Martínez. Tiene reservas de todo tipo: **UM-H0Y2Q8** (la cabalgata de hoy), **UM-PROX7A** (cabalgata en unos días, se puede cancelar), **UM-KAY4K2** (kayak que ya pasó, para valorar) y **UM-SOF1A9** (Barrio Histórico, realizada y valorada). |
+| Turistas extra | `lucia@demo.uy`, `diego@demo.uy`, `ana@demo.uy` | Dejaron las valoraciones que se ven en el detalle de las actividades. |
+| Prestador (el principal) | `prestador@demo.uy` | Martín Silva, "Cabalgatas del Polonio" (aprobado). Es el dueño de la cabalgata, así que con él se registra la asistencia de **UM-H0Y2Q8**. |
+| Otros prestadores aprobados | `sierras@demo.uy`, `colonia@demo.uy`, `kayak@demo.uy` | Sierras de Minas Aventura, Sabores y Calles de Colonia y Punta Kayak. |
+| Prestador pendiente | `pendiente@demo.uy` | Bodega Los Cerros: espera la aprobación del administrador y todavía no puede publicar. |
+
+### Tarjetas de prueba (el pago es simulado)
+
+| Tarjeta | Qué pasa |
+|---|---|
+| `4242 4242 4242 4242` | El pago se aprueba y la reserva queda confirmada. |
+| `4000 0000 0000 0002` | El pago se rechaza y la reserva sigue pendiente. |
+| `4000 0000 0000 0119` | El servicio de pagos no responde y la reserva no se confirma. |
+
+El vencimiento y el CVV no se controlan; se pueden dejar vacíos o poner, por ejemplo, `12/30` y `123`.
+
 ## Antes de empezar
 
 1. **Base de datos:**
