@@ -36,7 +36,9 @@ TeroBytes es la empresa de Patricio Saravia, Lorenzo Gianola, Federico Dolivo y 
 
 Por defecto la app **no borra nada** al arrancar (`DB_DDL_AUTO=update`): crea las tablas que falten y carga los datos de ejemplo solo si la base está vacía. Es lo que hay que usar con Supabase.
 
-Para que la demo local empiece siempre igual, poné `DB_DDL_AUTO=create` en tu `.env`: así cada arranque borra todo y vuelve a cargar los datos de ejemplo. Nunca uses `create` con Supabase.
+Para que la demo local empiece siempre igual, poné `DB_DDL_AUTO=create` en tu `.env`: así cada arranque borra todo y vuelve a cargar los datos de ejemplo.
+
+Con Supabase, usá `create` **una sola vez y a propósito**: la mañana de la demo, porque las fechas de ejemplo se calculan desde el día en que se cargan (por ejemplo, la reserva "de hoy" del guion). Después volvé a `update`, así un reinicio no borra lo que se hizo. Los pasos están en `docs/GUION_DEMO.md`.
 
 ## Cuentas de prueba
 

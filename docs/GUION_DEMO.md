@@ -7,9 +7,14 @@ Un recorrido que muestra todas las funciones en orden lógico. Todas las cuentas
 1. **Base de datos:**
    - Si usás **Supabase**, entrá al panel y fijate que el proyecto esté activo; se pausa después de una semana sin uso.
    - Si usás **Postgres local**, fijate que esté prendido.
-2. **Levantá la app:** `./mvnw spring-boot:run`. Cada vez que arranca, los datos de ejemplo vuelven al estado inicial.
-3. **Abrí dos ventanas del navegador**, una normal y una de incógnito. Así podés tener dos usuarios logueados al mismo tiempo (por ejemplo, turista y prestador).
-4. **Internet:** si hay, se ve el pronóstico del clima en el detalle de cada actividad. Si no hay, todo funciona igual, sin el clima.
+2. **Datos de ejemplo al día:** las fechas de ejemplo se calculan desde el día en que se cargan (la reserva **UM-H0Y2Q8** es "de hoy"). Por defecto la app no borra nada, así que el mismo día de la demo, a la mañana:
+   - poné `DB_DDL_AUTO=create` en el `.env` y levantá la app una vez (borra todo y carga los datos de nuevo);
+   - bajala y volvé a `DB_DDL_AUTO=update` (el paso 3 la levanta de nuevo).
+
+   Si te salteás esto, el paso de "Registrar asistencia" falla con "La asistencia se registra el día de la actividad".
+3. **Levantá la app:** `./mvnw spring-boot:run`.
+4. **Abrí dos ventanas del navegador**, una normal y una de incógnito. Así podés tener dos usuarios logueados al mismo tiempo (por ejemplo, turista y prestador).
+5. **Internet:** si hay, se ve el pronóstico del clima en el detalle de cada actividad. Si no hay, todo funciona igual, sin el clima.
 
 ## 1. El visitante (sin cuenta): el portal
 
