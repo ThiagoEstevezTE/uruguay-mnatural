@@ -312,3 +312,18 @@ main {
     width: 1.5rem;
     display: inline-block;
 }
+
+/* Camino arriba de cada pantalla: casita > seccion > pagina actual */
+.crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .4rem;
+    font-size: .9rem;
+    color: #6c7a75;
+}
+.crumbs a { color: var(--um-green); text-decoration: none; }
+.crumbs a:hover { text-decoration: underline; }
+.crumbs .bi-house-door-fill { font-size: 1.05rem; }
+.crumbs .bi-chevron-right { font-size: .7rem; opacity: .6; }
+.crumbs span { color: var(--um-text); }

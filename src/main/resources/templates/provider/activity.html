@@ -6,7 +6,7 @@
 
 <header class="panel-header">
     <div class="container">
-        <a th:href="@{/provider}" class="small"><i class="bi bi-arrow-left"></i> Volver a mi emprendimiento</a>
+        <nav class="crumbs" aria-label="Estás en"><a th:href="@{/}" aria-label="Inicio" title="Inicio"><i class="bi bi-house-door-fill"></i></a> <i class="bi bi-chevron-right" aria-hidden="true"></i> <a th:href="@{/provider}">Mi emprendimiento</a> <i class="bi bi-chevron-right" aria-hidden="true"></i> <span th:text="${activity.name}"></span></nav>
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mt-2">
             <div>
                 <h1 class="h3 mb-1" th:text="${activity.name}"></h1>

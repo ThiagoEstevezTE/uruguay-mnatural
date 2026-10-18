@@ -5,7 +5,7 @@
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
 <main class="container py-4">
-    <a th:href="@{/activities}" class="small"><i class="bi bi-arrow-left"></i> Volver a las actividades</a>
+    <nav class="crumbs" aria-label="Estás en"><a th:href="@{/}" aria-label="Inicio" title="Inicio"><i class="bi bi-house-door-fill"></i></a> <i class="bi bi-chevron-right" aria-hidden="true"></i> <a th:href="@{/activities}">Actividades</a> <i class="bi bi-chevron-right" aria-hidden="true"></i> <span th:text="${activity.name}"></span></nav>
 
     <div class="row g-4 mt-1">
         <div class="col-lg-8">

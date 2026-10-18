@@ -48,7 +48,7 @@
             <span th:text="${activity.locality.name + ', ' + activity.locality.department.name}"></span>
         </p>
         <p class="small text-muted mb-3" th:unless="${activity.upcomingInstances.isEmpty()}">
-            <i class="bi bi-calendar-event"></i> Próxima fecha:
+            <i class="bi bi-calendar-event"></i>
             <span th:text="${#temporals.format(activity.upcomingInstances[0].startDateTime, 'EEE dd/MM · HH:mm')}"></span>
         </p>
         <div class="mt-auto d-flex justify-content-between align-items-center">
