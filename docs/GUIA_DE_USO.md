@@ -18,6 +18,8 @@ Cómo se usa cada función básica de la página, paso a paso y con capturas. Pa
 
 Se entra con el botón **Ingresar**, arriba a la derecha. Para salir, **Salir** en el mismo lugar.
 
+Para volver a la portada desde cualquier pantalla, tocá **Inicio** en el menú o la casita que aparece arriba de cada página, al principio del camino (por ejemplo: casita › Actividades › Cabalgata al atardecer).
+
 La contraseña de **todas** las cuentas es `demo1234`.
 
 | Rol | Usuario | Para qué sirve |
