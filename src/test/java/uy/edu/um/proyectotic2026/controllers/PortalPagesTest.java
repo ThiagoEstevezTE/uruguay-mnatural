@@ -1,5 +1,8 @@
 package uy.edu.um.proyectotic2026.controllers;
 
+import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import uy.edu.um.proyectotic2026.repository.ActivityRepository;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -21,6 +25,9 @@ class PortalPagesTest {
 
     @Autowired
     private ActivityRepository activityRepo;
+
+    @Autowired
+    private EntityManagerFactory emf;
 
     @Test
     void homeAndSearchArePublic() throws Exception {
@@ -64,5 +71,25 @@ class PortalPagesTest {
         mvc.perform(get("/activities/99999"))
                 .andExpect(status().isNotFound())
                 .andExpect(view().name("error/not-found"));
+    }
+
+    // La portada y el buscador traen las fechas, tipos y emprendimientos de todas las actividades juntos,
+    // no con una consulta por actividad (con Supabase cada consulta tarda; antes eran unas 20 por pagina)
+    @Test
+    void homeAndSearchUseFewQueries() throws Exception {
+        Statistics stats = emf.unwrap(SessionFactory.class).getStatistics();
+        stats.setStatisticsEnabled(true);
+
+        stats.clear();
+        mvc.perform(get("/")).andExpect(status().isOk());
+        long home = stats.getPrepareStatementCount();
+
+        stats.clear();
+        mvc.perform(get("/activities")).andExpect(status().isOk());
+        long search = stats.getPrepareStatementCount();
+
+        stats.setStatisticsEnabled(false);
+        assertTrue(home <= 8, "La portada hizo " + home + " consultas");
+        assertTrue(search <= 8, "El buscador hizo " + search + " consultas");
     }
 }

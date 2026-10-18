@@ -1,6 +1,7 @@
 package uy.edu.um.proyectotic2026.repository;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import uy.edu.um.proyectotic2026.entities.Booking;
@@ -21,11 +22,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Booking> findLockedById(Long id);
 
+    // Las listas traen la valoracion de cada reserva en la misma consulta (si no, seria una consulta por reserva)
+    @EntityGraph(attributePaths = "rating")
     List<Booking> findByTouristEmailOrderByCreatedAtDesc(String email);
 
     List<Booking> findByInstanceId(Long instanceId);
 
     // Reservas de todas las actividades de un prestador, por fecha de la actividad
+    @EntityGraph(attributePaths = "rating")
     List<Booking> findByInstanceActivityBusinessProviderEmailOrderByInstanceStartDateTimeAsc(String providerEmail);
 
     // Pendientes que ya vencieron (para cancelarlas automaticamente).
