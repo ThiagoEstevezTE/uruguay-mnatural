@@ -7,6 +7,7 @@ import uy.edu.um.proyectotic2026.entities.Locality;
 import uy.edu.um.proyectotic2026.repository.DepartmentRepository;
 import uy.edu.um.proyectotic2026.repository.LocalityRepository;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +28,8 @@ public class LocationService {
     // Departamento -> sus localidades, ordenado alfabeticamente. Se usa en los desplegables.
     public Map<String, List<Locality>> getLocalitiesByDepartment() {
         Map<String, List<Locality>> result = new LinkedHashMap<>();
-        for (Department department : departmentRepo.findAllByOrderByNameAsc())
-            result.put(department.getName(), localityRepo.findByDepartmentIdOrderByNameAsc(department.getId()));
+        for (Locality locality : localityRepo.findAllWithDepartment())
+            result.computeIfAbsent(locality.getDepartment().getName(), name -> new ArrayList<>()).add(locality);
         return result;
     }
 }

@@ -54,6 +54,9 @@ public class Activity {
     @Column(nullable = false)
     private int bookingLimitMinutes = 0;
 
+    // Maximo de personas en una sola reserva, lo decide el prestador. null = sin tope.
+    private Integer maxParticipantsPerBooking;
+
     // Cancelacion por parte del turista (Acta 1, punto 4.5)
     @Column(nullable = false)
     private boolean allowsCancellation;

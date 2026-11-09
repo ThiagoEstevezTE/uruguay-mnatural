@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uy.edu.um.proyectotic2026.dto.ActivityDTO;
+import uy.edu.um.proyectotic2026.dto.BusinessDTO;
 import uy.edu.um.proyectotic2026.entities.Activity;
 import uy.edu.um.proyectotic2026.entities.Booking;
 import uy.edu.um.proyectotic2026.entities.Business;
@@ -44,6 +45,12 @@ public class ProviderWebController {
     @Autowired
     private BookingService bookingService;
 
+    @Autowired
+    private BusinessService businessService;
+
+    @Autowired
+    private CancellationReasonService reasonService;
+
     @GetMapping
     public String home(Model model, Principal principal) throws EntityNotFoundException {
         // principal.getName() es el email de quien inicio sesion
@@ -53,6 +60,34 @@ public class ProviderWebController {
         model.addAttribute("activities", activityService.getActivitiesOfProvider(principal.getName()));
         model.addAttribute("canPublish", !getApprovedBusinesses(provider).isEmpty());
         return "provider/home";
+    }
+
+    // ---------- Emprendimiento ----------
+
+    @GetMapping("/businesses/{id}/edit")
+    public String editBusiness(@PathVariable("id") Long id, Model model, Principal principal)
+            throws EntityNotFoundException {
+
+        model.addAttribute("form", BusinessDTO.from(businessService.getBusinessOfProvider(id, principal.getName())));
+        model.addAttribute("businessId", id);
+        model.addAttribute("localitiesByDepartment", locationService.getLocalitiesByDepartment());
+        return "provider/business-form";
+    }
+
+    @PostMapping("/businesses/{id}/edit")
+    public String updateBusiness(@PathVariable("id") Long id, @ModelAttribute("form") BusinessDTO form,
+                                 Model model, Principal principal, RedirectAttributes redirect)
+            throws EntityNotFoundException {
+        try {
+            businessService.updateBusiness(id, form, principal.getName());
+            redirect.addFlashAttribute("message", "Cambios guardados.");
+            return "redirect:/provider";
+        } catch (InvalidDataException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("businessId", id);
+            model.addAttribute("localitiesByDepartment", locationService.getLocalitiesByDepartment());
+            return "provider/business-form";
+        }
     }
 
     // ---------- Actividades ----------
@@ -95,6 +130,7 @@ public class ProviderWebController {
             throws EntityNotFoundException {
 
         model.addAttribute("activity", activityService.getActivityOfProvider(id, principal.getName()));
+        model.addAttribute("reasons", reasonService.getAll());
         return "provider/activity";
     }
 
@@ -145,9 +181,10 @@ public class ProviderWebController {
     @PostMapping("/instances/{id}/cancel")
     public String cancelInstance(@PathVariable("id") Long instanceId,
                                  @RequestParam("activityId") Long activityId,
+                                 @RequestParam(value = "reasonId", required = false) Long reasonId,
                                  Principal principal, RedirectAttributes redirect) {
         try {
-            int cancelled = bookingService.cancelInstance(instanceId, principal.getName());
+            int cancelled = bookingService.cancelInstance(instanceId, principal.getName(), reasonId);
             redirect.addFlashAttribute("message", "Fecha cancelada. Se cancelaron " + cancelled + " reservas.");
         } catch (InvalidDataException | EntityNotFoundException e) {
             redirect.addFlashAttribute("error", e.getMessage());

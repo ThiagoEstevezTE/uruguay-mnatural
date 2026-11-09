@@ -13,4 +13,6 @@ public interface ActivityInstanceRepository extends JpaRepository<ActivityInstan
     // Si dos turistas reservan la misma fecha a la vez, el segundo espera para calcular el cupo.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<ActivityInstance> findLockedById(Long id);
+
+    boolean existsByCancellationReasonId(Long reasonId);
 }

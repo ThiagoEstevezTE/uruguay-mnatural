@@ -3,13 +3,16 @@ package uy.edu.um.proyectotic2026.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uy.edu.um.proyectotic2026.dto.BusinessDTO;
 import uy.edu.um.proyectotic2026.entities.Administrator;
 import uy.edu.um.proyectotic2026.entities.Business;
 import uy.edu.um.proyectotic2026.entities.BusinessStatus;
+import uy.edu.um.proyectotic2026.entities.Locality;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
 import uy.edu.um.proyectotic2026.repository.AdministratorRepository;
 import uy.edu.um.proyectotic2026.repository.BusinessRepository;
+import uy.edu.um.proyectotic2026.repository.LocalityRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +26,9 @@ public class BusinessService {
 
     @Autowired
     private AdministratorRepository adminRepo;
+
+    @Autowired
+    private LocalityRepository localityRepo;
 
     public List<Business> getPendingBusinesses() {
         return businessRepo.findByStatusOrderByRequestDateAsc(BusinessStatus.PENDING);
@@ -70,6 +76,42 @@ public class BusinessService {
         business.setResolvedBy(getAdmin(adminEmail));
         business.setRejectionReason(reason.trim());
         return businessRepo.save(business);
+    }
+
+    // Un emprendimiento del prestador logueado. Si es de otro, es como si no existiera.
+    public Business getBusinessOfProvider(Long businessId, String providerEmail) throws EntityNotFoundException {
+        Business business = getById(businessId);
+        if (!business.getProvider().getEmail().equals(providerEmail))
+            throw new EntityNotFoundException("Emprendimiento no encontrado");
+        return business;
+    }
+
+    // El prestador cambia sus datos. El estado no se toca: el cliente pidio que no vuelva a revision.
+    @Transactional
+    public Business updateBusiness(Long businessId, BusinessDTO dto, String providerEmail)
+            throws EntityNotFoundException, InvalidDataException {
+
+        if (isBlank(dto.getName()) || isBlank(dto.getAddress()) || dto.getLocalityId() == null)
+            throw new InvalidDataException("Faltan datos obligatorios del emprendimiento");
+
+        if (dto.getDescription() != null && dto.getDescription().length() > 2000)
+            throw new InvalidDataException("La descripción no puede pasar de 2000 caracteres");
+
+        Business business = getBusinessOfProvider(businessId, providerEmail);
+        Locality locality = localityRepo.findById(dto.getLocalityId())
+                .orElseThrow(() -> new EntityNotFoundException("Localidad no encontrada"));
+
+        business.setName(dto.getName().trim());
+        business.setDescription(dto.getDescription());
+        business.setAddress(dto.getAddress().trim());
+        business.setPhone(dto.getPhone());
+        business.setEmail(dto.getEmail());
+        business.setLocality(locality);
+        return businessRepo.save(business);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     // Solo se puede resolver una solicitud que todavia esta pendiente

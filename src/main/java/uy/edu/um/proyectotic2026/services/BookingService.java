@@ -11,6 +11,7 @@ import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
 import uy.edu.um.proyectotic2026.exceptions.PaymentUnavailableException;
 import uy.edu.um.proyectotic2026.repository.ActivityInstanceRepository;
 import uy.edu.um.proyectotic2026.repository.BookingRepository;
+import uy.edu.um.proyectotic2026.repository.CancellationReasonRepository;
 import uy.edu.um.proyectotic2026.repository.PaymentRepository;
 import uy.edu.um.proyectotic2026.repository.TouristRepository;
 
@@ -27,7 +28,9 @@ public class BookingService {
 
     // La reserva pendiente se guarda 2 horas esperando el pago (Acta 1, punto 4.8)
     public static final int PAYMENT_DEADLINE_HOURS = 2;
-    public static final int MAX_PARTICIPANTS = 20;
+
+    // Lo que entra en la columna total_amount: sin tope de personas el total podria pasarse
+    private static final BigDecimal MAX_TOTAL_AMOUNT = new BigDecimal("99999999.99");
 
     private static final String CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private final SecureRandom random = new SecureRandom();
@@ -43,6 +46,9 @@ public class BookingService {
 
     @Autowired
     private TouristRepository touristRepo;
+
+    @Autowired
+    private CancellationReasonRepository reasonRepo;
 
     @Autowired
     private PaymentGatewayClient paymentGateway;
@@ -84,8 +90,13 @@ public class BookingService {
 
         if (participants == null || participants < 1)
             throw new InvalidDataException("La reserva tiene que ser para al menos 1 persona");
-        if (participants > MAX_PARTICIPANTS)
-            throw new InvalidDataException("Se pueden reservar hasta " + MAX_PARTICIPANTS + " lugares por reserva");
+        Integer maxPerBooking = activity.getMaxParticipantsPerBooking();
+        if (maxPerBooking != null && participants > maxPerBooking)
+            throw new InvalidDataException("Se pueden reservar hasta " + maxPerBooking + " lugares por reserva");
+
+        BigDecimal totalAmount = activity.getPrice().multiply(BigDecimal.valueOf(participants));
+        if (totalAmount.compareTo(MAX_TOTAL_AMOUNT) > 0)
+            throw new InvalidDataException("El total de la reserva es demasiado alto");
 
         // Edad minima: se controla con la fecha de nacimiento del turista (Acta 1, punto 4.1)
         if (activity.getMinimumAge() != null) {
@@ -116,7 +127,7 @@ public class BookingService {
                 .code(generateCode())
                 .participants(participants)
                 .observations(observations == null || observations.isBlank() ? null : observations.trim())
-                .totalAmount(activity.getPrice().multiply(BigDecimal.valueOf(participants)))
+                .totalAmount(totalAmount)
                 .createdAt(now)
                 .expiresAt(expiresAt)
                 .build();
@@ -254,9 +265,8 @@ public class BookingService {
     }
 
     // El prestador cancela una fecha: se cancelan todas sus reservas activas (Acta 1, punto 4.6).
-    // La devolucion segun el motivo todavia no esta definida con el cliente.
     @Transactional
-    public int cancelInstance(Long instanceId, String providerEmail)
+    public int cancelInstance(Long instanceId, String providerEmail, Long reasonId)
             throws EntityNotFoundException, InvalidDataException {
 
         ActivityInstance instance = instanceRepo.findById(instanceId)
@@ -268,8 +278,14 @@ public class BookingService {
         if (!instance.getStartDateTime().isAfter(LocalDateTime.now()))
             throw new InvalidDataException("No se puede cancelar una fecha que ya pasó");
 
+        if (reasonId == null)
+            throw new InvalidDataException("Elegí el motivo de la cancelación");
+        CancellationReason reason = reasonRepo.findById(reasonId)
+                .orElseThrow(() -> new EntityNotFoundException("Motivo de cancelación no encontrado"));
+
         instance.setStatus(InstanceStatus.CANCELLED);
         instance.setCancellationDate(LocalDateTime.now());
+        instance.setCancellationReason(reason);
         instanceRepo.save(instance);
 
         int cancelled = 0;

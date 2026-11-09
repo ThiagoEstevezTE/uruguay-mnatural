@@ -10,6 +10,7 @@ import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
 import uy.edu.um.proyectotic2026.services.ActivityTypeService;
 import uy.edu.um.proyectotic2026.services.BusinessService;
+import uy.edu.um.proyectotic2026.services.CancellationReasonService;
 import uy.edu.um.proyectotic2026.services.EquipmentService;
 
 import java.security.Principal;
@@ -26,6 +27,9 @@ public class AdminController {
 
     @Autowired
     private EquipmentService equipmentService;
+
+    @Autowired
+    private CancellationReasonService reasonService;
 
     // Inicio del administrador: la bandeja de solicitudes pendientes
     @GetMapping
@@ -149,7 +153,50 @@ public class AdminController {
         return "redirect:/admin/equipment";
     }
 
-    // Las dos pantallas de ABM usan la misma plantilla (admin/catalog.html)
+    // ---------- Motivos de cancelacion ----------
+
+    @GetMapping("/cancellation-reasons")
+    public String cancellationReasons(Model model) {
+        model.addAttribute("items", reasonService.getAll());
+        addCatalogInfo(model, "cancellation-reasons", "Motivos de cancelación", "Ej.: Mal clima");
+        return "admin/catalog";
+    }
+
+    @PostMapping("/cancellation-reasons")
+    public String createCancellationReason(@RequestParam("name") String name, RedirectAttributes redirect) {
+        try {
+            reasonService.create(name);
+            redirect.addFlashAttribute("message", "Motivo agregado.");
+        } catch (InvalidDataException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/cancellation-reasons";
+    }
+
+    @PostMapping("/cancellation-reasons/{id}")
+    public String updateCancellationReason(@PathVariable("id") Long id, @RequestParam("name") String name,
+                                           RedirectAttributes redirect) {
+        try {
+            reasonService.update(id, name);
+            redirect.addFlashAttribute("message", "Motivo modificado.");
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/cancellation-reasons";
+    }
+
+    @PostMapping("/cancellation-reasons/{id}/delete")
+    public String deleteCancellationReason(@PathVariable("id") Long id, RedirectAttributes redirect) {
+        try {
+            reasonService.delete(id);
+            redirect.addFlashAttribute("message", "Motivo eliminado.");
+        } catch (InvalidDataException | EntityNotFoundException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/cancellation-reasons";
+    }
+
+    // Las pantallas de ABM usan la misma plantilla (admin/catalog.html)
     private void addCatalogInfo(Model model, String path, String title, String placeholder) {
         model.addAttribute("path", path);
         model.addAttribute("title", title);

@@ -17,6 +17,7 @@ public class ActivitySearchDTO {
 
     private String keyword;
     private Long departmentId;
+    private Long localityId;
     private Long typeId;
     private BigDecimal maxPrice;
 

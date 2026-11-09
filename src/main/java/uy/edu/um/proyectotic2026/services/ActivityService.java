@@ -125,6 +125,7 @@ public class ActivityService {
         activity.setPrice(dto.getPrice());
         activity.setMinimumAge(dto.getMinimumAge());
         activity.setBookingLimitMinutes(dto.getBookingLimitMinutes() == null ? 0 : dto.getBookingLimitMinutes());
+        activity.setMaxParticipantsPerBooking(dto.getMaxParticipantsPerBooking());
         activity.setAllowsCancellation(dto.isAllowsCancellation());
         activity.setCancellationMinHours(dto.isAllowsCancellation() ? dto.getCancellationMinHours() : null);
         activity.setPublished(dto.isPublished());
@@ -156,6 +157,9 @@ public class ActivityService {
 
         if (dto.getBookingLimitMinutes() != null && dto.getBookingLimitMinutes() < 0)
             throw new InvalidDataException("Los minutos límite para reservar no pueden ser negativos");
+
+        if (dto.getMaxParticipantsPerBooking() != null && dto.getMaxParticipantsPerBooking() < 1)
+            throw new InvalidDataException("El máximo de personas por reserva tiene que ser de al menos 1");
 
         if (dto.getTypeIds() == null || dto.getTypeIds().isEmpty())
             throw new InvalidDataException("Elegí al menos un tipo de actividad");

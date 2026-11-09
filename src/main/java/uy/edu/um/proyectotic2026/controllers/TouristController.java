@@ -42,7 +42,6 @@ public class TouristController {
             ActivityInstance instance = bookingService.getInstanceToBook(instanceId);
             model.addAttribute("instance", instance);
             model.addAttribute("activity", instance.getActivity());
-            model.addAttribute("maxParticipants", BookingService.MAX_PARTICIPANTS);
             return "tourist/book";
         } catch (InvalidDataException e) {
             redirect.addFlashAttribute("error", e.getMessage());
@@ -67,7 +66,6 @@ public class TouristController {
                 ActivityInstance instance = bookingService.getInstanceToBook(instanceId);
                 model.addAttribute("instance", instance);
                 model.addAttribute("activity", instance.getActivity());
-                model.addAttribute("maxParticipants", BookingService.MAX_PARTICIPANTS);
                 return "tourist/book";
             } catch (InvalidDataException ex) {
                 return "redirect:/";

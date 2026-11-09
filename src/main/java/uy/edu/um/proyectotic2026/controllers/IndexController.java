@@ -54,6 +54,7 @@ public class IndexController {
     @GetMapping("/activities")
     public String activities(@ModelAttribute("search") ActivitySearchDTO search, Model model) {
         model.addAttribute("activities", portalService.searchActivities(search));
+        model.addAttribute("localitiesByDepartment", locationService.getLocalitiesByDepartment());
         addSearchFormData(model);
         return "activities";
     }

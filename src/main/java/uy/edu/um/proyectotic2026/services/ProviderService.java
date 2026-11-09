@@ -107,6 +107,10 @@ public class ProviderService {
         if (dto.getPassword().length() < 8)
             throw new InvalidDataException("La contraseña debe tener al menos 8 caracteres");
 
+        // Solo la manda el formulario web; la API registra con una sola contraseña
+        if (dto.getConfirmPassword() != null && !dto.getConfirmPassword().equals(dto.getPassword()))
+            throw new InvalidDataException("Las contraseñas no coinciden");
+
         if (isBlank(dto.getBusinessName()) || isBlank(dto.getBusinessAddress())
                 || dto.getLocalityId() == null)
             throw new InvalidDataException("Faltan datos obligatorios del emprendimiento");

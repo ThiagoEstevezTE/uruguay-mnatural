@@ -26,6 +26,7 @@ public class ActivityDTO {
     private BigDecimal price;
     private Integer minimumAge;
     private Integer bookingLimitMinutes = 0;
+    private Integer maxParticipantsPerBooking;
     private boolean allowsCancellation;
     private Integer cancellationMinHours;
     private boolean published = true;
@@ -47,6 +48,7 @@ public class ActivityDTO {
         dto.setPrice(activity.getPrice());
         dto.setMinimumAge(activity.getMinimumAge());
         dto.setBookingLimitMinutes(activity.getBookingLimitMinutes());
+        dto.setMaxParticipantsPerBooking(activity.getMaxParticipantsPerBooking());
         dto.setAllowsCancellation(activity.isAllowsCancellation());
         dto.setCancellationMinHours(activity.getCancellationMinHours());
         dto.setPublished(activity.isPublished());

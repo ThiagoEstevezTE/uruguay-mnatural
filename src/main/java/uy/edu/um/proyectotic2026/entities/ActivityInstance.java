@@ -36,6 +36,11 @@ public class ActivityInstance {
 
     private LocalDateTime cancellationDate;
 
+    // Por que la cancelo el prestador (lo elige de la lista que carga el administrador)
+    @ManyToOne
+    @JoinColumn(name = "cancellation_reason_id")
+    private CancellationReason cancellationReason;
+
     public boolean isFuture() {
         return startDateTime.isAfter(LocalDateTime.now());
     }

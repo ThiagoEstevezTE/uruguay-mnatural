@@ -30,6 +30,8 @@ public class PortalService {
                 .filter(a -> matchesKeyword(a, search.getKeyword()))
                 .filter(a -> search.getDepartmentId() == null
                         || a.getLocality().getDepartment().getId().equals(search.getDepartmentId()))
+                .filter(a -> search.getLocalityId() == null
+                        || a.getLocality().getId().equals(search.getLocalityId()))
                 .filter(a -> search.getTypeId() == null
                         || a.getTypes().stream().anyMatch(t -> t.getId().equals(search.getTypeId())))
                 .filter(a -> search.getMaxPrice() == null || a.getPrice().compareTo(search.getMaxPrice()) <= 0)

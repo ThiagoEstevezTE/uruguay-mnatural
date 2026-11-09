@@ -13,6 +13,7 @@ public class ProviderRegistrationDTO {
 
     private String email;
     private String password;
+    private String confirmPassword;
     private String name;
     private String document;
     private String phone;
