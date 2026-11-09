@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Editar emprendimiento')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <nav class="crumbs" aria-label="Estás en"><a th:href="@{/}" aria-label="Inicio" title="Inicio"><i class="bi bi-house-door-fill"></i></a> <i class="bi bi-chevron-right" aria-hidden="true"></i> <a th:href="@{/provider}">Mi emprendimiento</a> <i class="bi bi-chevron-right" aria-hidden="true"></i> <span>Editar emprendimiento</span></nav>
+    <h1 class="h3 mt-2 mb-4">Editar emprendimiento</h1>
+
+    <div th:replace="~{fragments/layout :: messages}"></div>
+
+    <form th:action="@{/provider/businesses/{id}/edit(id=${businessId})}" th:object="${form}" method="post">
+        <div class="card card-um p-4 mb-3">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Nombre</label>
+                    <input type="text" th:field="*{name}" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="localityId" class="form-label">Localidad</label>
+                    <select th:field="*{localityId}" class="form-select" required>
+                        <optgroup th:each="entry : ${localitiesByDepartment}" th:label="${entry.key}">
+                            <option th:each="locality : ${entry.value}" th:value="${locality.id}" th:text="${locality.name}"></option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label for="address" class="form-label">Dirección</label>
+                    <input type="text" th:field="*{address}" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="phone" class="form-label">Teléfono</label>
+                    <input type="text" th:field="*{phone}" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" th:field="*{email}" class="form-control">
+                </div>
+                <div class="col-12">
+                    <label for="description" class="form-label">Descripción</label>
+                    <textarea th:field="*{description}" class="form-control" rows="4" maxlength="2000"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-check-lg"></i> Guardar cambios</button>
+    </form>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

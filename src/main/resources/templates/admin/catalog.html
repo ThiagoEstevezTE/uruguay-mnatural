@@ -4,7 +4,7 @@
 <body>
 <nav th:replace="~{fragments/layout :: navbar}"></nav>
 
-<!-- ABM generico: lo usan "Tipos de actividad" y "Equipamiento". "path" dice cual es. -->
+<!-- ABM generico: lo usan "Tipos de actividad", "Equipamiento" y "Motivos de cancelacion". "path" dice cual es. -->
 <header class="panel-header">
     <div class="container">
         <h1 class="h3 mb-1">Administración</h1>
@@ -19,7 +19,7 @@
         <div class="col-lg-4">
             <div class="card card-um p-4">
                 <h2 class="h5">Agregar</h2>
-                <p class="small text-muted">Estos datos los usan todos los prestadores al cargar sus actividades.</p>
+                <p class="small text-muted">Estos datos los usan todos los prestadores.</p>
                 <form th:action="@{/admin/{path}(path=${path})}" method="post">
                     <input type="text" name="name" class="form-control mb-2" th:placeholder="${placeholder}" required>
                     <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Agregar</button>

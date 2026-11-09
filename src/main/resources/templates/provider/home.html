@@ -22,7 +22,12 @@
                     <span th:text="${business.address + ', ' + business.locality.name + ' (' + business.locality.department.name + ')'}"></span>
                 </p>
             </div>
-            <span th:replace="~{fragments/layout :: businessStatus(${business.status})}"></span>
+            <div class="d-flex align-items-center gap-2">
+                <span th:replace="~{fragments/layout :: businessStatus(${business.status})}"></span>
+                <a class="btn btn-sm btn-outline-primary" th:href="@{/provider/businesses/{id}/edit(id=${business.id})}">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+            </div>
         </div>
 
         <div class="alert alert-warning mt-3 mb-0" th:if="${business.status.name() == 'PENDING'}">

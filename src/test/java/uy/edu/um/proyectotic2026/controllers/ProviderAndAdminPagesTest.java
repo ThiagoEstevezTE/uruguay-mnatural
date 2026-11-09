@@ -7,9 +7,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import uy.edu.um.proyectotic2026.entities.Business;
+import uy.edu.um.proyectotic2026.entities.BusinessStatus;
 import uy.edu.um.proyectotic2026.repository.ActivityRepository;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,6 +39,45 @@ class ProviderAndAdminPagesTest {
         mvc.perform(get("/provider/activities/new")).andExpect(status().isOk());
         mvc.perform(get("/provider/activities/" + id)).andExpect(status().isOk());
         mvc.perform(get("/provider/activities/" + id + "/edit")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "prestador@demo.uy", roles = "PROVIDER")
+    void providerEditsHisBusinessFromForm() throws Exception {
+        Business business = activityRepo.findByBusinessProviderEmailOrderByNameAsc("prestador@demo.uy").get(0).getBusiness();
+
+        mvc.perform(get("/provider/businesses/" + business.getId() + "/edit")).andExpect(status().isOk());
+
+        mvc.perform(post("/provider/businesses/" + business.getId() + "/edit").with(csrf())
+                        .param("name", "Cabalgatas del Faro")
+                        .param("address", "Ruta 10 km 264")
+                        .param("localityId", business.getLocality().getId().toString()))
+                .andExpect(redirectedUrl("/provider"))
+                .andExpect(flash().attribute("message", "Cambios guardados."));
+        assertEquals(BusinessStatus.APPROVED, business.getStatus());
+    }
+
+    @Test
+    @WithMockUser(username = "kayak@demo.uy", roles = "PROVIDER")
+    void providerCannotEditBusinessOfOther() throws Exception {
+        Long id = activityRepo.findByBusinessProviderEmailOrderByNameAsc("prestador@demo.uy").get(0).getBusiness().getId();
+
+        mvc.perform(get("/provider/businesses/" + id + "/edit"))
+                .andExpect(view().name("error/not-found"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@uymnatural.uy", roles = "ADMIN")
+    void adminSeesCancellationReasons() throws Exception {
+        mvc.perform(get("/admin/cancellation-reasons"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Mal clima")));
+    }
+
+    @Test
+    @WithMockUser(username = "prestador@demo.uy", roles = "PROVIDER")
+    void providerCannotOpenCancellationReasons() throws Exception {
+        mvc.perform(get("/admin/cancellation-reasons")).andExpect(status().isForbidden());
     }
 
     @Test

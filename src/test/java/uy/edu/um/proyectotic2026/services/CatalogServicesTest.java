@@ -4,10 +4,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import uy.edu.um.proyectotic2026.entities.ActivityInstance;
 import uy.edu.um.proyectotic2026.entities.ActivityType;
+import uy.edu.um.proyectotic2026.entities.CancellationReason;
 import uy.edu.um.proyectotic2026.entities.Equipment;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
+import uy.edu.um.proyectotic2026.repository.ActivityInstanceRepository;
 import uy.edu.um.proyectotic2026.repository.ActivityTypeRepository;
+import uy.edu.um.proyectotic2026.repository.CancellationReasonRepository;
 import uy.edu.um.proyectotic2026.repository.EquipmentRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,6 +23,15 @@ class CatalogServicesTest {
 
     @Autowired
     private ActivityTypeService typeService;
+
+    @Autowired
+    private CancellationReasonService reasonService;
+
+    @Autowired
+    private CancellationReasonRepository reasonRepo;
+
+    @Autowired
+    private ActivityInstanceRepository instanceRepo;
 
     @Autowired
     private EquipmentService equipmentService;
@@ -39,6 +52,33 @@ class CatalogServicesTest {
 
         typeService.delete(type.getId());
         assertFalse(typeRepo.existsById(type.getId()));
+    }
+
+    @Test
+    void createUpdateAndDeleteCancellationReason() throws Exception {
+        CancellationReason reason = reasonService.create("  Paro de transporte ");
+        assertEquals("Paro de transporte", reason.getName());
+
+        reasonService.update(reason.getId(), "Paro");
+        assertEquals("Paro", reasonRepo.findById(reason.getId()).orElseThrow().getName());
+
+        reasonService.delete(reason.getId());
+        assertFalse(reasonRepo.existsById(reason.getId()));
+    }
+
+    @Test
+    void duplicatedCancellationReasonIsRejected() {
+        assertThrows(InvalidDataException.class, () -> reasonService.create("mal clima"));
+    }
+
+    @Test
+    void cancellationReasonInUseCannotBeDeleted() {
+        CancellationReason reason = reasonRepo.findByName("Mal clima").orElseThrow();
+        ActivityInstance instance = instanceRepo.findAll().get(0);
+        instance.setCancellationReason(reason);
+        instanceRepo.save(instance);
+
+        assertThrows(InvalidDataException.class, () -> reasonService.delete(reason.getId()));
     }
 
     @Test

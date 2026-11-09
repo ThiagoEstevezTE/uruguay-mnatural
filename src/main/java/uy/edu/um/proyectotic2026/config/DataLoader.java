@@ -42,6 +42,9 @@ public class DataLoader implements CommandLineRunner {
     private ActivityTypeRepository typeRepo;
 
     @Autowired
+    private CancellationReasonRepository reasonRepo;
+
+    @Autowired
     private EquipmentRepository equipmentRepo;
 
     @Autowired
@@ -71,6 +74,9 @@ public class DataLoader implements CommandLineRunner {
         if (demoPassword == null || demoPassword.isBlank())
             throw new IllegalStateException("DEMO_PASSWORD no puede estar vacía: borrala del .env o poné una contraseña");
 
+        // Va antes del control de abajo: una base que ya tenia datos tambien los necesita
+        loadCancellationReasons();
+
         // Si ya hay usuarios, la base ya tiene datos: no se carga nada de nuevo
         if (userRepo.count() > 0)
             return;
@@ -81,6 +87,14 @@ public class DataLoader implements CommandLineRunner {
         loadUsers();
         loadActivities();
         loadBookingsAndRatings();
+    }
+
+    // Sin motivos el prestador no podria cancelar una fecha
+    private void loadCancellationReasons() {
+        if (reasonRepo.count() > 0)
+            return;
+        for (String name : new String[]{"Mal clima", "Falta de participantes", "Problema de salud", "Fuerza mayor"})
+            reasonRepo.save(CancellationReason.builder().name(name).build());
     }
 
     // Tipos de actividad y equipamiento (los ejemplos de la letra)

@@ -40,6 +40,10 @@
                             <input type="password" th:field="*{password}" class="form-control" minlength="8" required>
                             <div class="form-text">Al menos 8 caracteres.</div>
                         </div>
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label">Repetí la contraseña</label>
+                            <input type="password" th:field="*{confirmPassword}" class="form-control" minlength="8" required>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 mt-4">Crear cuenta</button>
                 </form>

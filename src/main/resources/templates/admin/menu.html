@@ -15,6 +15,9 @@
     <a class="nav-link" th:classappend="${active == 'equipment'} ? 'active'" th:href="@{/admin/equipment}">
         <i class="bi bi-backpack"></i> Equipamiento
     </a>
+    <a class="nav-link" th:classappend="${active == 'cancellation-reasons'} ? 'active'" th:href="@{/admin/cancellation-reasons}">
+        <i class="bi bi-calendar-x"></i> Motivos de cancelación
+    </a>
 </nav>
 </body>
 </html>

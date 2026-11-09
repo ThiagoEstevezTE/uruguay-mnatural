@@ -48,6 +48,36 @@ class RegistrationFlowTest {
     }
 
     @Test
+    void differentPasswordsAreRejected() throws Exception {
+        mvc.perform(post("/register/tourist").with(csrf())
+                        .param("firstName", "Lucía")
+                        .param("lastName", "Gómez")
+                        .param("document", "59876543")
+                        .param("birthDate", "2001-03-20")
+                        .param("email", "lucia@mail.com")
+                        .param("password", "secreta123")
+                        .param("confirmPassword", "otra12345"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("error", "Las contraseñas no coinciden"))
+                .andExpect(view().name("register/tourist"));
+
+        assertTrue(touristRepo.findByEmail("lucia@mail.com").isEmpty());
+    }
+
+    @Test
+    void matchingPasswordsRegister() throws Exception {
+        mvc.perform(post("/register/tourist").with(csrf())
+                        .param("firstName", "Lucía")
+                        .param("lastName", "Gómez")
+                        .param("document", "59876543")
+                        .param("birthDate", "2001-03-20")
+                        .param("email", "lucia@mail.com")
+                        .param("password", "secreta123")
+                        .param("confirmPassword", "secreta123"))
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
     void formShowsErrorAndKeepsData() throws Exception {
         mvc.perform(post("/register/tourist").with(csrf())
                         .param("firstName", "Lucía")

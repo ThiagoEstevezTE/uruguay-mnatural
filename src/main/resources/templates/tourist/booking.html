@@ -50,6 +50,9 @@
                     </span>
                     el <span th:text="${#temporals.format(booking.cancellationDate, 'dd/MM/yyyy HH:mm')}"></span>.
                 </p>
+                <p class="mb-0 mt-2" th:if="${booking.cancelledBy?.name() == 'PROVIDER' and booking.instance.cancellationReason != null}">
+                    <strong>Motivo:</strong> <span th:text="${booking.instance.cancellationReason.name}"></span>
+                </p>
             </div>
 
             <!-- Valorar: solo despues de la actividad -->

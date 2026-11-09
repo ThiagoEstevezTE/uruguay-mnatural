@@ -48,6 +48,18 @@ class PortalServiceTest {
     }
 
     @Test
+    void filtersByLocality() {
+        Activity activity = portalService.searchActivities(new ActivitySearchDTO()).get(0);
+        ActivitySearchDTO search = new ActivitySearchDTO();
+        search.setLocalityId(activity.getLocality().getId());
+
+        List<Activity> result = portalService.searchActivities(search);
+
+        assertTrue(names(result).contains(activity.getName()));
+        assertTrue(result.stream().allMatch(a -> a.getLocality().getId().equals(activity.getLocality().getId())));
+    }
+
+    @Test
     void filtersByDepartment() {
         ActivitySearchDTO search = new ActivitySearchDTO();
         search.setDepartmentId(departmentId("Lavalleja"));

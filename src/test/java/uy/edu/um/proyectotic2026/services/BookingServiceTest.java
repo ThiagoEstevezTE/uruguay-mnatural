@@ -45,6 +45,9 @@ class BookingServiceTest {
     @Autowired
     private TouristRepository touristRepo;
 
+    @Autowired
+    private CancellationReasonRepository reasonRepo;
+
     @MockitoBean
     private PaymentGatewayClient paymentGateway;
 
@@ -96,6 +99,33 @@ class BookingServiceTest {
         InvalidDataException e = assertThrows(InvalidDataException.class,
                 () -> bookingService.createBooking(instance.getId(), "nene@demo.uy", 1, null));
         assertTrue(e.getMessage().contains("mayores de 10"));
+    }
+
+    @Test
+    void respectsMaxParticipantsSetByTheProvider() {
+        trekking.setMaxParticipantsPerBooking(3);
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+
+        assertThrows(InvalidDataException.class,
+                () -> bookingService.createBooking(instance.getId(), TOURIST, 4, null));
+    }
+
+    @Test
+    void withoutMaxParticipantsLargeGroupsCanBook() throws Exception {
+        trekking.setMaxParticipantsPerBooking(null);
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+
+        assertEquals(30, bookingService.createBooking(instance.getId(), TOURIST, 30, null).getParticipants());
+    }
+
+    @Test
+    void totalTooHighForTheDatabaseIsRejected() {
+        trekking.setMaxParticipantsPerBooking(null);
+        trekking.setPrice(new BigDecimal("99999999"));
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+
+        assertThrows(InvalidDataException.class,
+                () -> bookingService.createBooking(instance.getId(), TOURIST, 2, null));
     }
 
     @Test
@@ -255,10 +285,13 @@ class BookingServiceTest {
     void providerCancelsDateAndItsBookings() throws Exception {
         Booking booking = newBooking();
 
-        int cancelled = bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy");
+        CancellationReason reason = reasonRepo.findByName("Mal clima").orElseThrow();
+
+        int cancelled = bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy", reason.getId());
 
         assertEquals(1, cancelled);
         assertEquals(InstanceStatus.CANCELLED, booking.getInstance().getStatus());
+        assertEquals(reason.getId(), booking.getInstance().getCancellationReason().getId());
         assertEquals(CancelledBy.PROVIDER, bookingRepo.findById(booking.getId()).orElseThrow().getCancelledBy());
     }
 
@@ -266,7 +299,18 @@ class BookingServiceTest {
     void otherProviderCannotCancelTheDate() throws Exception {
         Booking booking = newBooking();
         assertThrows(EntityNotFoundException.class,
-                () -> bookingService.cancelInstance(booking.getInstance().getId(), "kayak@demo.uy"));
+                () -> bookingService.cancelInstance(booking.getInstance().getId(), "kayak@demo.uy", 1L));
+    }
+
+    @Test
+    void cancellingADateNeedsAReason() throws Exception {
+        Booking booking = newBooking();
+
+        assertThrows(InvalidDataException.class,
+                () -> bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy", null));
+
+        assertEquals(InstanceStatus.SCHEDULED, booking.getInstance().getStatus());
+        assertEquals(BookingStatus.PENDING, booking.getStatus());
     }
 
     // ---------- Asistencia ----------

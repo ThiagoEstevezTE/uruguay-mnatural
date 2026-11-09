@@ -62,11 +62,18 @@
                             <span class="fw-semibold" th:text="${#temporals.format(instance.startDateTime, 'EEEE dd/MM/yyyy · HH:mm')}"></span>
                             <span class="text-muted small" th:text="${instance.maxCapacity} ? ${' · cupo ' + instance.maxCapacity} : ' · sin cupo'"></span>
                         </div>
-                        <span th:if="${instance.status.name() == 'CANCELLED'}" class="badge text-bg-secondary">Cancelada</span>
-                        <form th:if="${instance.status.name() == 'SCHEDULED' and instance.future}"
+                        <div th:if="${instance.status.name() == 'CANCELLED'}" class="text-end">
+                            <span class="badge text-bg-secondary">Cancelada</span>
+                            <div class="small text-muted" th:if="${instance.cancellationReason}" th:text="${instance.cancellationReason.name}"></div>
+                        </div>
+                        <form th:if="${instance.status.name() == 'SCHEDULED' and instance.future}" class="d-flex gap-2"
                               method="post" th:action="@{/provider/instances/{id}/cancel(id=${instance.id})}"
                               onsubmit="return confirm('Se van a cancelar también las reservas de esta fecha. ¿Seguir?');">
                             <input type="hidden" name="activityId" th:value="${activity.id}">
+                            <select name="reasonId" class="form-select form-select-sm" aria-label="Motivo de la cancelación" required>
+                                <option value="">Motivo...</option>
+                                <option th:each="reason : ${reasons}" th:value="${reason.id}" th:text="${reason.name}"></option>
+                            </select>
                             <button type="submit" class="btn btn-sm btn-outline-danger text-nowrap">Cancelar fecha</button>
                         </form>
                     </li>

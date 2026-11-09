@@ -81,6 +81,18 @@ class ActivityServiceTest {
     }
 
     @Test
+    void savesMaxParticipantsPerBooking() throws Exception {
+        dto.setMaxParticipantsPerBooking(6);
+        assertEquals(6, activityService.createActivity(dto, PROVIDER).getMaxParticipantsPerBooking());
+    }
+
+    @Test
+    void maxParticipantsPerBookingMustBePositive() {
+        dto.setMaxParticipantsPerBooking(0);
+        assertThrows(InvalidDataException.class, () -> activityService.createActivity(dto, PROVIDER));
+    }
+
+    @Test
     void typeIsRequired() {
         dto.setTypeIds(List.of());
         assertThrows(InvalidDataException.class, () -> activityService.createActivity(dto, PROVIDER));

@@ -258,6 +258,8 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **El formulario del prestador** usa el mismo `ProviderService.registerProvider` que la API REST. La lógica está una sola vez, aunque haya dos formas de usarla.
 - **Desplegable de localidades:** `LocationService.getLocalitiesByDepartment()` arma un `Map` de departamento a localidades. El HTML lo muestra con `<optgroup>`: los departamentos son los títulos y las localidades, las opciones.
 
+**Repetir la contraseña.** El formulario manda `confirmPassword` y el service compara las dos: si no coinciden, tira `InvalidDataException` y vuelve el formulario con el error. La API REST no manda ese campo (viene `null`) y sigue registrando con una sola contraseña.
+
 ## 2.8 Bandeja de solicitudes del administrador
 
 **Archivos:** `services/BusinessService`, `controllers/AdminController` y `templates/admin/*.html`.
@@ -268,6 +270,8 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - **Solo se resuelven solicitudes pendientes.** No se puede aprobar dos veces ni aprobar algo que ya se rechazó.
 - **`Principal principal`:** en el controller es "quién está logueado". `principal.getName()` devuelve su email, y con eso el service sabe qué administrador resolvió.
 - **El panel del prestador** (`/provider`) muestra cada emprendimiento con su estado y, si fue rechazado, el motivo.
+
+**Editar el emprendimiento.** En `/provider`, cada emprendimiento tiene "Editar" (`/provider/businesses/{id}/edit`). `BusinessService.updateBusiness` primero controla que sea del prestador logueado y después copia los datos del `BusinessDTO`. El estado no se toca: el cliente pidió que un cambio no vuelva a revisión.
 
 ## 2.9 Actividades, fechas, tipos y equipamiento
 
@@ -317,6 +321,10 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 - 4 emprendimientos aprobados en Rocha, Lavalleja, Colonia y Maldonado, y 1 pendiente;
 - 7 actividades con fechas en los próximos días. Las fechas se calculan desde el día en que arranca la app, así la demo siempre tiene fechas futuras.
 
+**Tope de personas por reserva.** `Activity.maxParticipantsPerBooking` lo define el prestador en el formulario de la actividad; vacío (`null`) quiere decir sin tope. Es distinto del cupo: el cupo es por fecha y el tope es por cada reserva.
+
+**Motivos de cancelación.** `CancellationReason` es un ABM igual al de tipos de actividad y usa la misma pantalla (`admin/catalog.html`). No se puede borrar un motivo ya usado. `DataLoader` carga cuatro de ejemplo si la tabla está vacía, también en una base que ya tenía datos: sin motivos el prestador no podría cancelar.
+
 ## 2.10 Portal público y buscador
 
 **Archivos:** `services/PortalService`, `controllers/IndexController`, `dto/ActivitySearchDTO`, `templates/index.html`, `activities.html`, `activity.html` y `fragments/cards.html`.
@@ -340,6 +348,8 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
   - la portada de cada actividad muestra la foto de su lugar (`static/img/lugares`) con un `th:switch` sobre el nombre de la localidad. Si el lugar no tiene foto, queda la portada de color según su tipo, con el atributo `data-type` que lee el CSS;
   - las fotos son de Wikimedia Commons con licencia libre (CC BY-SA): se pueden usar nombrando al autor y la licencia, y eso está en `/credits` (`credits.html`, con un link en el pie). Muestran el lugar, no al prestador ni su actividad;
   - **Si preguntan por qué no es un campo de la base:** las fotos de cada actividad son IMAGEN_ACTIVIDAD del MER y todavía no están (ver 3.4). Mientras tanto, la foto del lugar es fija y no cambia la base.
+
+**Filtro por localidad.** `ActivitySearchDTO.localityId` se aplica en el mismo stream que los otros filtros. Un script chico en `activities.html` deja en el desplegable solo las localidades del departamento elegido. `LocationService.getLocalitiesByDepartment` las trae en una sola consulta (`join fetch`), para no hacer una por departamento.
 
 ## 2.11 Reservas ⭐
 
@@ -380,7 +390,8 @@ Detalle de la actividad → elige fecha → /tourist/book/{fecha}
 **Cancelaciones:**
 - **El turista** (`cancelByTourist`) puede cancelar si la actividad lo permite y si falta más tiempo que la anticipación mínima (Acta 1, punto 4.5). Una pendiente siempre la puede cancelar.
 - **El prestador** (`cancelInstance`) cancela una fecha entera, y se cancelan todas sus reservas activas (Acta 1, punto 4.6).
-- **Pendiente con el cliente:** el acta deja sin definir los motivos de cancelación y el porcentaje de devolución de cada uno. Por eso no se implementó el reembolso.
+- **Motivo al cancelar una fecha:** `cancelInstance` exige el id de un `CancellationReason` y lo guarda en la fecha. El turista lo ve en el detalle de su reserva.
+- **Tope por reserva:** `createBooking` lo controla con el valor de la actividad. Además rechaza un total que no entra en la columna `total_amount`.
 
 ## 2.12 Pagos: integración con un servicio externo ⭐⭐
 
@@ -510,9 +521,9 @@ src/main/resources/
 | `ProviderService` | Registro de prestadores con su emprendimiento (Lorenzo) |
 | `TouristService` | Registro de turistas |
 | `LoginService` | Buscar al usuario cuando inicia sesión |
-| `BusinessService` | Bandeja del administrador: aprobar o rechazar emprendimientos |
+| `BusinessService` | Bandeja del administrador (aprobar o rechazar) y edición de datos por el prestador |
 | `ActivityService` | Actividades y fechas del prestador |
-| `ActivityTypeService`, `EquipmentService` | ABM del administrador |
+| `ActivityTypeService`, `EquipmentService`, `CancellationReasonService` | ABM del administrador |
 | `LocationService` | Departamentos y localidades para los desplegables |
 | `PortalService` | Lo público: buscador, portada, detalle y consultas de la API |
 | `BookingService` | Reservas, pagos, cancelaciones, vencimiento y asistencia |
@@ -546,7 +557,7 @@ src/main/resources/
 
 | Tema | Estado |
 |---|---|
-| **Reembolsos** (REEMBOLSO y MOTIVO_CANCELACION del MER) | El Acta 1 (punto 4.6) dice que los motivos y porcentajes "quedan pendientes de definir con el cliente". Hay que preguntarlos en la próxima reunión. |
+| **Reembolsos** (REEMBOLSO del MER) | Los motivos ya están. La devolución de la plata es lo próximo: 100 % si cancela el prestador y lo que él defina si cancela el turista. |
 | **Guardar el medio de pago del turista** (MEDIO_PAGO) | Está acordado en el acta (4.1), pero no es necesario para reservar. Es la próxima mejora. |
 | **Imágenes de las actividades** (IMAGEN_ACTIVIDAD) | Por ahora cada actividad muestra una foto de su lugar (fija, de Wikimedia Commons) o, si el lugar no tiene, una portada de color según su tipo. Falta que el prestador pueda subir las fotos de su actividad. |
 | **Mail de confirmación** | Se muestra en pantalla. Mandarlo de verdad necesita un servidor de correo (por ejemplo `spring-boot-starter-mail`). |

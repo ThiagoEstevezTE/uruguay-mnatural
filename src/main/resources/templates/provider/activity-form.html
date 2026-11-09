@@ -96,6 +96,11 @@
                     <div class="form-text">0 = se puede reservar hasta la hora de inicio.</div>
                 </div>
                 <div class="col-md-4">
+                    <label for="maxParticipantsPerBooking" class="form-label">Máximo de personas por reserva (opcional)</label>
+                    <input type="number" th:field="*{maxParticipantsPerBooking}" class="form-control" min="1">
+                    <div class="form-text">Vacío = sin tope.</div>
+                </div>
+                <div class="col-md-4">
                     <div class="form-check form-switch mt-md-4">
                         <input class="form-check-input" type="checkbox" th:field="*{published}">
                         <label class="form-check-label" th:for="${#ids.prev('published')}">Visible en el portal</label>

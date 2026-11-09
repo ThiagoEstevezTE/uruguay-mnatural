@@ -20,6 +20,14 @@
                     <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.name}"></option>
                 </select>
 
+                <label class="form-label small fw-semibold" for="localityId">Localidad</label>
+                <select th:field="*{localityId}" class="form-select mb-3">
+                    <option value="">Todas</option>
+                    <optgroup th:each="entry : ${localitiesByDepartment}" th:label="${entry.key}">
+                        <option th:each="locality : ${entry.value}" th:value="${locality.id}" th:text="${locality.name}"></option>
+                    </optgroup>
+                </select>
+
                 <label class="form-label small fw-semibold" for="typeId">Tipo de actividad</label>
                 <select th:field="*{typeId}" class="form-select mb-3">
                     <option value="">Todos</option>
@@ -58,5 +66,22 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+<script>
+    // Al elegir un departamento solo quedan sus localidades
+    const department = document.getElementById('departmentId');
+    const locality = document.getElementById('localityId');
+    function filterLocalities() {
+        const name = department.value ? department.options[department.selectedIndex].text : null;
+        locality.querySelectorAll('optgroup').forEach(group => {
+            const show = !name || group.label === name;
+            group.hidden = !show;
+            group.disabled = !show;
+        });
+        if (locality.selectedOptions[0].parentElement.disabled)
+            locality.value = '';
+    }
+    department.addEventListener('change', filterLocalities);
+    filterLocalities();
+</script>
 </body>
 </html>
