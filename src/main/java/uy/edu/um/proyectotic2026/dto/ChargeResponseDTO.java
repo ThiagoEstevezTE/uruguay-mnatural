@@ -16,6 +16,11 @@ public class ChargeResponseDTO {
     private String status;          // "approved" o "rejected"
     private String transactionId;
     private String message;
+    private String cardLastDigits;  // Solo lo completa Mercado Pago
+
+    public ChargeResponseDTO(String status, String transactionId, String message) {
+        this(status, transactionId, message, null);
+    }
 
     public boolean isApproved() {
         return "approved".equals(status);

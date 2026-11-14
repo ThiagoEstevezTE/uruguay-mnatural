@@ -5,6 +5,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uy.edu.um.proyectotic2026.dto.ChargeResponseDTO;
+import uy.edu.um.proyectotic2026.dto.MercadoPagoPaymentDTO;
 import uy.edu.um.proyectotic2026.entities.*;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
@@ -34,6 +35,9 @@ public class BookingService {
 
     private static final String CODE_CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private final SecureRandom random = new SecureRandom();
+
+    @Autowired
+    private MercadoPagoClient mercadoPago;
 
     @Autowired
     private BookingRepository bookingRepo;
@@ -154,19 +158,7 @@ public class BookingService {
     public Booking payBooking(Long bookingId, String touristEmail, String cardNumber)
             throws EntityNotFoundException, InvalidDataException, PaymentUnavailableException {
 
-        // Se bloquea la reserva: un doble clic en "Pagar" no puede cobrar dos veces.
-        // El segundo pedido espera, y cuando sigue la reserva ya esta confirmada.
-        Booking booking = bookingRepo.findLockedById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
-        checkOwner(booking, touristEmail);
-
-        if (booking.getStatus() != BookingStatus.PENDING)
-            throw new InvalidDataException("Esta reserva no está pendiente de pago");
-
-        if (!LocalDateTime.now().isBefore(booking.getExpiresAt())) {
-            cancel(booking, CancelledBy.SYSTEM);
-            throw new InvalidDataException("Venció el plazo para pagar y la reserva se canceló");
-        }
+        Booking booking = lockPayableBooking(bookingId, touristEmail);
 
         String card = cardNumber == null ? "" : cardNumber.replace(" ", "");
         if (!card.matches("\\d{13,19}"))
@@ -182,34 +174,91 @@ public class BookingService {
 
         try {
             ChargeResponseDTO response = paymentGateway.charge(card, booking.getTotalAmount(),
-                    "Reserva " + booking.getCode() + " - " + booking.getActivity().getName());
-
-            payment.setExternalTransactionId(response.getTransactionId());
-            payment.setMessage(response.getMessage());
-
-            if (response.isApproved()) {
-                payment.setStatus(PaymentStatus.APPROVED);
-                booking.setStatus(BookingStatus.CONFIRMED);
-            } else {
-                // Rechazado: queda registrado y la reserva sigue pendiente para reintentar
-                payment.setStatus(PaymentStatus.REJECTED);
-                booking.getPayments().add(payment);
-                paymentRepo.save(payment);
-                throw new InvalidDataException("El pago fue rechazado: " + response.getMessage()
-                        + ". Podés intentar con otra tarjeta.");
-            }
+                    paymentDescription(booking));
+            return applyPaymentResult(booking, payment, response);
         } catch (PaymentUnavailableException e) {
-            // El servicio no respondio: NO se confirma la reserva, se guarda el intento con error
-            payment.setStatus(PaymentStatus.ERROR);
-            payment.setMessage(e.getMessage());
-            booking.getPayments().add(payment);
-            paymentRepo.save(payment);
+            savePaymentError(booking, payment, e);
             throw e;
         }
+    }
 
+    // Igual que payBooking, pero con el token que genera el formulario de Mercado Pago.
+    @Transactional(noRollbackFor = {InvalidDataException.class, PaymentUnavailableException.class})
+    public Booking payBookingWithMercadoPago(Long bookingId, String touristEmail, MercadoPagoPaymentDTO data)
+            throws EntityNotFoundException, InvalidDataException, PaymentUnavailableException {
+
+        Booking booking = lockPayableBooking(bookingId, touristEmail);
+
+        if (data.getToken() == null || data.getToken().isBlank())
+            throw new InvalidDataException("Faltan los datos de la tarjeta");
+
+        Payment payment = Payment.builder()
+                .booking(booking)
+                .amount(booking.getTotalAmount())
+                .cardBrand(data.getPaymentMethodId())
+                .date(LocalDateTime.now())
+                .build();
+
+        try {
+            ChargeResponseDTO response = mercadoPago.pay(data, booking.getTotalAmount(),
+                    paymentDescription(booking));
+            payment.setCardLastDigits(response.getCardLastDigits());
+            return applyPaymentResult(booking, payment, response);
+        } catch (PaymentUnavailableException e) {
+            savePaymentError(booking, payment, e);
+            throw e;
+        }
+    }
+
+    // Se bloquea la reserva: un doble clic en "Pagar" no puede cobrar dos veces.
+    // El segundo pedido espera, y cuando sigue la reserva ya esta confirmada.
+    private Booking lockPayableBooking(Long bookingId, String touristEmail)
+            throws EntityNotFoundException, InvalidDataException {
+        Booking booking = bookingRepo.findLockedById(bookingId)
+                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+        checkOwner(booking, touristEmail);
+
+        if (booking.getStatus() != BookingStatus.PENDING)
+            throw new InvalidDataException("Esta reserva no está pendiente de pago");
+
+        if (!LocalDateTime.now().isBefore(booking.getExpiresAt())) {
+            cancel(booking, CancelledBy.SYSTEM);
+            throw new InvalidDataException("Venció el plazo para pagar y la reserva se canceló");
+        }
+        return booking;
+    }
+
+    private String paymentDescription(Booking booking) {
+        return "Reserva " + booking.getCode() + " - " + booking.getActivity().getName();
+    }
+
+    private Booking applyPaymentResult(Booking booking, Payment payment, ChargeResponseDTO response)
+            throws InvalidDataException {
+        payment.setExternalTransactionId(response.getTransactionId());
+        payment.setMessage(response.getMessage());
+
+        if (!response.isApproved()) {
+            // Rechazado: queda registrado y la reserva sigue pendiente para reintentar
+            payment.setStatus(PaymentStatus.REJECTED);
+            booking.getPayments().add(payment);
+            paymentRepo.save(payment);
+            throw new InvalidDataException("El pago fue rechazado: " + response.getMessage()
+                    + ". Podés intentar con otra tarjeta.");
+        }
+
+        payment.setStatus(PaymentStatus.APPROVED);
+        booking.setStatus(BookingStatus.CONFIRMED);
         booking.getPayments().add(payment);
         paymentRepo.save(payment);
         return bookingRepo.save(booking);
+    }
+
+    // El servicio no respondio: NO se confirma la reserva, se guarda el intento con error
+    private void savePaymentError(Booking booking, Payment payment, PaymentUnavailableException e) {
+        payment.setStatus(PaymentStatus.ERROR);
+        payment.setMessage(e.getMessage());
+        booking.getPayments().add(payment);
+        paymentRepo.save(payment);
     }
 
     // ---------- Consultar ----------

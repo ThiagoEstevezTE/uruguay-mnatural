@@ -17,7 +17,26 @@
                 <a class="btn btn-primary" th:href="@{/tourist/bookings/{id}(id=${booking.id})}">Ver la reserva</a>
             </div>
 
-            <form th:if="${booking.status.name() == 'PENDING'}" class="card card-um p-4"
+            <!-- Con Mercado Pago, la tarjeta se carga en su formulario y a nuestro servidor solo llega un token -->
+            <div th:if="${booking.status.name() == 'PENDING' and usingMercadoPago}" class="card card-um p-4">
+                <div class="alert alert-warning small">
+                    <i class="bi bi-hourglass-split"></i>
+                    Tu lugar está guardado hasta las <strong th:text="${#temporals.format(booking.expiresAt, 'HH:mm')}"></strong>.
+                    Si no se paga antes, la reserva se cancela sola.
+                </div>
+                <div id="mp-brick"></div>
+                <form id="mp-form" th:action="@{/tourist/bookings/{id}/pay-mp(id=${booking.id})}" method="post">
+                    <input type="hidden" name="token">
+                    <input type="hidden" name="paymentMethodId">
+                    <input type="hidden" name="issuerId">
+                    <input type="hidden" name="installments">
+                    <input type="hidden" name="payerEmail">
+                    <input type="hidden" name="identificationType">
+                    <input type="hidden" name="identificationNumber">
+                </form>
+            </div>
+
+            <form th:if="${booking.status.name() == 'PENDING' and !usingMercadoPago}" class="card card-um p-4"
                   th:action="@{/tourist/bookings/{id}/pay(id=${booking.id})}" method="post">
                 <div class="alert alert-warning small">
                     <i class="bi bi-hourglass-split"></i>
@@ -49,7 +68,7 @@
                 </button>
             </form>
 
-            <div class="card card-um p-3 mt-3 small" th:if="${booking.status.name() == 'PENDING'}">
+            <div class="card card-um p-3 mt-3 small" th:if="${booking.status.name() == 'PENDING' and !usingMercadoPago}">
                 <strong><i class="bi bi-tools"></i> Tarjetas de prueba (servicio de pagos simulado)</strong>
                 <ul class="mb-0 mt-1">
                     <li><code>4242 4242 4242 4242</code>: pago aprobado</li>
@@ -66,5 +85,35 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+<th:block th:if="${booking.status.name() == 'PENDING' and usingMercadoPago}">
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script th:inline="javascript">
+        const publicKey = /*[[${mercadoPagoPublicKey}]]*/ '';
+        const amount = Number(/*[[${booking.totalAmount}]]*/ 0);
+        const mp = new MercadoPago(publicKey, { locale: 'es-UY' });
+
+        mp.bricks().create('cardPayment', 'mp-brick', {
+            initialization: { amount: amount },
+            callbacks: {
+                onReady: () => {},
+                onError: (error) => console.error(error),
+                onSubmit: (data) => {
+                    // Se manda con un form comun: asi viaja el token CSRF de Spring
+                    const fields = document.getElementById('mp-form').elements;
+                    fields['token'].value = data.token;
+                    fields['paymentMethodId'].value = data.payment_method_id;
+                    fields['issuerId'].value = data.issuer_id || '';
+                    fields['installments'].value = data.installments;
+                    fields['payerEmail'].value = data.payer.email;
+                    fields['identificationType'].value = data.payer.identification ? data.payer.identification.type : '';
+                    fields['identificationNumber'].value = data.payer.identification ? data.payer.identification.number : '';
+                    document.getElementById('mp-form').submit();
+                    // La pagina se va: el formulario queda en "procesando" hasta entonces
+                    return new Promise(() => {});
+                }
+            }
+        });
+    </script>
+</th:block>
 </body>
 </html>

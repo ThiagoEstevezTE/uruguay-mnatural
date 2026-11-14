@@ -1,6 +1,7 @@
 package uy.edu.um.proyectotic2026.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -8,6 +9,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uy.edu.um.proyectotic2026.entities.ActivityInstance;
+import uy.edu.um.proyectotic2026.dto.MercadoPagoPaymentDTO;
 import uy.edu.um.proyectotic2026.entities.Booking;
 import uy.edu.um.proyectotic2026.entities.BookingStatus;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
@@ -75,20 +77,53 @@ public class TouristController {
 
     // ---------- Pagar ----------
 
+    @Value("${payment.provider:simulator}")
+    private String paymentProvider;
+
+    // La Public Key se puede mostrar en la pantalla; el Access Token, nunca.
+    @Value("${mercadopago.public-key:}")
+    private String mercadoPagoPublicKey;
+
+    private boolean usingMercadoPago() {
+        return "mercadopago".equals(paymentProvider);
+    }
+
     @GetMapping("/bookings/{id}/pay")
     public String payForm(@PathVariable("id") Long id, Model model, Principal principal)
             throws EntityNotFoundException {
         model.addAttribute("booking", bookingService.getBookingOfTourist(id, principal.getName()));
+        model.addAttribute("usingMercadoPago", usingMercadoPago());
+        model.addAttribute("mercadoPagoPublicKey", mercadoPagoPublicKey);
         return "tourist/pay";
     }
 
     @PostMapping("/bookings/{id}/pay")
     public String pay(@PathVariable("id") Long id, @RequestParam("cardNumber") String cardNumber,
                       Principal principal, RedirectAttributes redirect) throws EntityNotFoundException {
+        // Con Mercado Pago prendido, el simulador no puede confirmar reservas
+        if (usingMercadoPago()) {
+            redirect.addFlashAttribute("error", "El pago se hace con el formulario de Mercado Pago");
+            return "redirect:/tourist/bookings/" + id + "/pay";
+        }
         try {
             Booking booking = bookingService.payBooking(id, principal.getName(), cardNumber);
             redirect.addFlashAttribute("message", "¡Pago aprobado! Tu reserva está confirmada. "
                     + "Te enviamos la confirmación por email con el número de reserva " + booking.getCode() + ".");
+            return "redirect:/tourist/bookings/" + id;
+        } catch (InvalidDataException | PaymentUnavailableException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            return "redirect:/tourist/bookings/" + id + "/pay";
+        }
+    }
+
+    @PostMapping("/bookings/{id}/pay-mp")
+    public String payWithMercadoPago(@PathVariable("id") Long id, @ModelAttribute MercadoPagoPaymentDTO data,
+                                     Principal principal, RedirectAttributes redirect)
+            throws EntityNotFoundException {
+        try {
+            Booking booking = bookingService.payBookingWithMercadoPago(id, principal.getName(), data);
+            redirect.addFlashAttribute("message", "¡Pago aprobado! Tu reserva está confirmada. "
+                    + "Número de reserva: " + booking.getCode() + ".");
             return "redirect:/tourist/bookings/" + id;
         } catch (InvalidDataException | PaymentUnavailableException e) {
             redirect.addFlashAttribute("error", e.getMessage());
