@@ -81,7 +81,17 @@ Todas usan la contraseña `demo1234`. Se puede cambiar con `DEMO_PASSWORD` en el
 
 ## Tarjetas de prueba
 
-El pago lo procesa un **servicio de pagos externo simulado** (`simulator/FakePaymentGatewayController`). La app lo llama por HTTP, igual que llamaría a uno real.
+Los pagos van por **Mercado Pago en modo prueba**: no se cobra plata de verdad. Para que ande, el `.env` tiene que tener `MP_ACCESS_TOKEN` y `MP_PUBLIC_KEY` (las claves se pasan por privado, nunca se suben a GitHub).
+
+| Dato | Valor |
+|---|---|
+| Número | `5031 7557 3453 0604` |
+| Vencimiento y código | `11/30` y `123` |
+| Documento | CI `12345672` |
+| Email | `comprador@test.uy` |
+| Nombre del titular | `APRO`: pago aprobado, la reserva se confirma. `OTHE`: pago rechazado, la reserva sigue pendiente |
+
+Sin claves de Mercado Pago, poné `PAYMENT_PROVIDER=simulator` en el `.env` y se usa el **servicio de pagos simulado** que trae la app (`simulator/FakePaymentGatewayController`):
 
 | Tarjeta | Resultado |
 |---|---|
