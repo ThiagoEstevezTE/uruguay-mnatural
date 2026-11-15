@@ -11,6 +11,8 @@ public class MercadoPagoPaymentDTO {
 
     private String token;
     private String paymentMethodId;
+    private String paymentTypeId;     // credit_card o debit_card
+    private String cardLastDigits;    // solo para mostrar en la reserva
     private String issuerId;
     private Integer installments;
     private String payerEmail;
