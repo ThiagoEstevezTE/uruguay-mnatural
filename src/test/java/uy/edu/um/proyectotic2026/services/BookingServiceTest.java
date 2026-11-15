@@ -515,7 +515,7 @@ class BookingServiceTest {
         ChargeResponseDTO approved = new ChargeResponseDTO("approved", "ORD01", "Pago aprobado");
         approved.setPaymentId("PAY01");
         when(mercadoPago.pay(any(), any(), anyString(), anyString())).thenReturn(approved);
-        when(mercadoPago.refund(anyString(), anyString(), any(), anyBoolean())).thenReturn("REF01");
+        when(mercadoPago.refund(anyString(), anyString(), any(), anyBoolean(), anyString())).thenReturn("REF01");
         MercadoPagoPaymentDTO data = new MercadoPagoPaymentDTO();
         data.setToken("tok_1");
         Booking booking = bookingService.payBookingWithMercadoPago(newBooking().getId(), TOURIST, data);
@@ -523,7 +523,7 @@ class BookingServiceTest {
         Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
 
         // 80 %: es una devolucion parcial, con el pago de adentro de la orden
-        verify(mercadoPago).refund("ORD01", "PAY01", new BigDecimal("1920.00"), false);
+        verify(mercadoPago).refund("ORD01", "PAY01", new BigDecimal("1920.00"), false, "reembolso-" + booking.getCode());
         verify(paymentGateway, never()).refund(anyString(), any());
         assertEquals("REF01", cancelled.getRefund().getExternalRefundId());
     }
@@ -533,7 +533,7 @@ class BookingServiceTest {
         ChargeResponseDTO approved = new ChargeResponseDTO("approved", "ORD02", "Pago aprobado");
         approved.setPaymentId("PAY02");
         when(mercadoPago.pay(any(), any(), anyString(), anyString())).thenReturn(approved);
-        when(mercadoPago.refund(anyString(), anyString(), any(), anyBoolean())).thenReturn("REF02");
+        when(mercadoPago.refund(anyString(), anyString(), any(), anyBoolean(), anyString())).thenReturn("REF02");
         MercadoPagoPaymentDTO data = new MercadoPagoPaymentDTO();
         data.setToken("tok_1");
         Booking booking = bookingService.payBookingWithMercadoPago(newBooking().getId(), TOURIST, data);
@@ -541,6 +541,6 @@ class BookingServiceTest {
 
         bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy", reason.getId());
 
-        verify(mercadoPago).refund("ORD02", "PAY02", new BigDecimal("2400.00"), true);
+        verify(mercadoPago).refund("ORD02", "PAY02", new BigDecimal("2400.00"), true, "reembolso-" + booking.getCode());
     }
 }

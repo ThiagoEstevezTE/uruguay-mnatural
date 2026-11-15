@@ -168,7 +168,9 @@ public class MercadoPagoClient {
     // Devuelve plata de una orden ya cobrada (POST /v1/orders/{id}/refund).
     // Sin cuerpo, Mercado Pago devuelve todo; para devolver una parte hay que mandar el pago y el monto.
     // Devuelve el identificador de la devolucion.
-    public String refund(String orderId, String paymentId, BigDecimal amount, boolean total)
+    // idempotencyKey es siempre la misma para la misma devolucion: si un reintento llega despues de que
+    // Mercado Pago ya devolvio (por ejemplo, se corto la respuesta), no devuelve dos veces.
+    public String refund(String orderId, String paymentId, BigDecimal amount, boolean total, String idempotencyKey)
             throws PaymentUnavailableException {
 
         Map<String, Object> body = null;
@@ -182,8 +184,7 @@ public class MercadoPagoClient {
         try {
             var request = restClient.post()
                     .uri("/v1/orders/{id}/refund", orderId)
-                    // Si se reintenta, Mercado Pago no devuelve dos veces lo mismo dentro de la misma llamada
-                    .header("X-Idempotency-Key", UUID.randomUUID().toString());
+                    .header("X-Idempotency-Key", idempotencyKey);
             if (body != null) {
                 request = request.contentType(MediaType.APPLICATION_JSON).body(body);
             }

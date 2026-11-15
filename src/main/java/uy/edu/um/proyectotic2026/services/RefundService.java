@@ -89,7 +89,7 @@ public class RefundService {
         try {
             String refundId = chargedByMercadoPago(payment)
                     ? mercadoPago.refund(payment.getExternalTransactionId(), payment.getExternalPaymentId(),
-                            refund.getAmount(), total)
+                            refund.getAmount(), total, "reembolso-" + refund.getBooking().getCode())
                     : paymentGateway.refund(payment.getExternalTransactionId(), refund.getAmount());
 
             refund.setStatus(RefundStatus.REFUNDED);

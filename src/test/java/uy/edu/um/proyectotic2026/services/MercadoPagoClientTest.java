@@ -193,13 +193,13 @@ class MercadoPagoClientTest {
         responseStatus = 201;
         responseBody = REFUNDED;
 
-        String refundId = client().refund("ORDTST01", "PAY01", new BigDecimal("750"), false);
+        String refundId = client().refund("ORDTST01", "PAY01", new BigDecimal("750"), false, "reembolso-UM-1");
 
         assertEquals("REF01", refundId);
         assertEquals("POST", receivedMethod);
         assertEquals("/v1/orders/ORDTST01/refund", receivedPath);
         assertEquals("Bearer token-de-prueba", receivedAuth);
-        assertNotNull(receivedKey);
+        assertEquals("reembolso-UM-1", receivedKey);
         assertTrue(receivedBody.contains("\"id\":\"PAY01\""));
         assertTrue(receivedBody.contains("\"amount\":\"750.00\""));
     }
@@ -209,7 +209,7 @@ class MercadoPagoClientTest {
         responseStatus = 201;
         responseBody = REFUNDED;
 
-        client().refund("ORDTST01", "PAY01", new BigDecimal("1500"), true);
+        client().refund("ORDTST01", "PAY01", new BigDecimal("1500"), true, "reembolso-UM-1");
 
         assertEquals("/v1/orders/ORDTST01/refund", receivedPath);
         assertTrue(receivedBody.isEmpty());
@@ -221,6 +221,6 @@ class MercadoPagoClientTest {
         responseBody = "{\"errors\":[{\"code\":\"insufficient_balance\"}]}";
 
         assertThrows(PaymentUnavailableException.class,
-                () -> client().refund("ORDTST01", "PAY01", BigDecimal.TEN, false));
+                () -> client().refund("ORDTST01", "PAY01", BigDecimal.TEN, false, "reembolso-UM-1"));
     }
 }
