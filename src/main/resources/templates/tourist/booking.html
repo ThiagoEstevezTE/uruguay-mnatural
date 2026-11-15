@@ -66,7 +66,7 @@
                         <i class="bi bi-hourglass-split"></i>
                         <strong>Reembolso en trámite:</strong>
                         <span th:text="${'$ ' + #numbers.formatDecimal(booking.refund.amount, 1, 'POINT', 0, 'COMMA')}"></span>
-                        (<span th:text="${booking.refund.percentage}"></span> %). El servicio de pagos no respondió y lo volvemos a intentar solo.
+                        (<span th:text="${booking.refund.percentage}"></span> %). El servicio de pagos todavía no la aceptó: la volvemos a pedir sola cada minuto.
                     </p>
                     <p class="small text-muted mb-0 mt-1">El banco puede tardar unos días en mostrarlo en tu resumen.</p>
                 </div>

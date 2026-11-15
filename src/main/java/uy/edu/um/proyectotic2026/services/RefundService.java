@@ -12,7 +12,9 @@ import uy.edu.um.proyectotic2026.repository.RefundRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 // Devoluciones de plata cuando se cancela una reserva pagada (pedido del cliente):
 //   - si cancela el turista, se devuelve el porcentaje que fijo el prestador en la actividad;
@@ -23,8 +25,8 @@ public class RefundService {
 
     private static final Logger log = LoggerFactory.getLogger(RefundService.class);
 
-    // Despues de tantos intentos fallidos se deja de reintentar solo (queda en el log para revisarlo a mano)
-    static final int MAX_ATTEMPTS = 12;
+    // Despues de tantos intentos fallidos (una hora) se deja de reintentar solo; queda en el log para revisarlo a mano
+    static final int MAX_ATTEMPTS = 60;
 
     @Autowired
     private RefundRepository refundRepo;
@@ -70,8 +72,10 @@ public class RefundService {
         return refundRepo.save(refund);
     }
 
-    // Si el servicio de pagos no respondio, se vuelve a intentar cada 5 minutos
-    @Scheduled(fixedRate = 300000, initialDelay = 60000)
+    // Si el servicio de pagos no respondio, se vuelve a intentar cada minuto.
+    // Mercado Pago rechaza (422) devolver un pago de hace pocos segundos, mientras todavia lo procesa:
+    // al minuto siguiente sale bien.
+    @Scheduled(fixedRate = 60000, initialDelay = 30000)
     @Transactional
     public void retryPendingRefunds() {
         for (Refund refund : refundRepo.findByStatus(RefundStatus.PENDING)) {
@@ -89,7 +93,7 @@ public class RefundService {
         try {
             String refundId = chargedByMercadoPago(payment)
                     ? mercadoPago.refund(payment.getExternalTransactionId(), payment.getExternalPaymentId(),
-                            refund.getAmount(), total, "reembolso-" + refund.getBooking().getCode())
+                            refund.getAmount(), total, idempotencyKey(refund))
                     : paymentGateway.refund(payment.getExternalTransactionId(), refund.getAmount());
 
             refund.setStatus(RefundStatus.REFUNDED);
@@ -102,6 +106,12 @@ public class RefundService {
                     refund.getBooking().getCode(), refund.getAttempts(), e.getMessage());
             refund.setMessage(e.getMessage());
         }
+    }
+
+    // Siempre la misma para la misma reserva, con forma de UUID (Mercado Pago rechaza otras claves con 422)
+    static String idempotencyKey(Refund refund) {
+        return UUID.nameUUIDFromBytes(("reembolso-" + refund.getBooking().getCode())
+                .getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     // Pagos anteriores a guardar el proveedor: los del simulador tienen ids que empiezan con "txn_"

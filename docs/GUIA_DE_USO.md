@@ -108,7 +108,7 @@ Cuando el pago se aprueba, la reserva queda **Confirmada** y aparece la entrada 
 1. Tocá **Mis reservas** en el menú de arriba.
 2. Cada reserva muestra su estado: *Confirmada*, *Pendiente de pago* (con el botón **Pagar**) o *Realizada*.
 3. Para cancelar, entrá a **Ver detalle** y tocá **Cancelar reserva**. El botón aparece solo si falta más tiempo que el plazo de la actividad (en la cabalgata, 24 horas). Probalo con `UM-PROX7A`.
-4. Arriba del botón dice cuánto se te devuelve: el porcentaje que fijó el prestador (en la cabalgata, el 50 %). Al cancelar, la plata vuelve a la tarjeta y en el detalle queda el **Reembolso** con el monto. Si el servicio de pagos no responde, queda *en trámite* y se reintenta solo cada 5 minutos.
+4. Arriba del botón dice cuánto se te devuelve: el porcentaje que fijó el prestador (en la cabalgata, el 50 %). Al cancelar, la plata vuelve a la tarjeta y en el detalle queda el **Reembolso** con el monto. Si se cancela segundos después de pagar, Mercado Pago todavía está procesando el pago: la devolución queda *en trámite* y en uno o dos minutos se completa sola (recargá la página).
 
 ![Mis reservas](guia-img/11-mis-reservas.jpg)
 

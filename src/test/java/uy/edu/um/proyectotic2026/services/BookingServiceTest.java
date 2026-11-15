@@ -501,7 +501,7 @@ class BookingServiceTest {
         assertEquals(RefundStatus.PENDING, cancelled.getRefund().getStatus());
         assertEquals(1, cancelled.getRefund().getAttempts());
 
-        // Cuando el servicio vuelve, la tarea que corre cada 5 minutos la termina
+        // Cuando el servicio vuelve, la tarea que corre cada minuto la termina
         doReturn("rfd_2").when(paymentGateway).refund(anyString(), any());
         refundService.retryPendingRefunds();
 
@@ -523,7 +523,8 @@ class BookingServiceTest {
         Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
 
         // 80 %: es una devolucion parcial, con el pago de adentro de la orden
-        verify(mercadoPago).refund("ORD01", "PAY01", new BigDecimal("1920.00"), false, "reembolso-" + booking.getCode());
+        verify(mercadoPago).refund("ORD01", "PAY01", new BigDecimal("1920.00"), false,
+                RefundService.idempotencyKey(cancelled.getRefund()));
         verify(paymentGateway, never()).refund(anyString(), any());
         assertEquals("REF01", cancelled.getRefund().getExternalRefundId());
     }
@@ -541,6 +542,18 @@ class BookingServiceTest {
 
         bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy", reason.getId());
 
-        verify(mercadoPago).refund("ORD02", "PAY02", new BigDecimal("2400.00"), true, "reembolso-" + booking.getCode());
+        Refund refund = bookingRepo.findById(booking.getId()).orElseThrow().getRefund();
+        verify(mercadoPago).refund("ORD02", "PAY02", new BigDecimal("2400.00"), true, RefundService.idempotencyKey(refund));
+    }
+
+    @Test
+    void refundKeyIsAlwaysTheSameForTheSameBookingAndLooksLikeAUuid() throws Exception {
+        Booking booking = paidBooking();
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        String key = RefundService.idempotencyKey(cancelled.getRefund());
+
+        assertEquals(key, RefundService.idempotencyKey(cancelled.getRefund()));
+        assertEquals(key, java.util.UUID.fromString(key).toString());
     }
 }

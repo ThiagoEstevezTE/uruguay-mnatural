@@ -211,7 +211,7 @@ public class TouristController {
         if (refund.getStatus() == RefundStatus.REFUNDED)
             return "Cancelaste la reserva. Te devolvimos " + amount + " (" + refund.getPercentage()
                     + " %) a la tarjeta con la que pagaste.";
-        return "Cancelaste la reserva. La devolución de " + amount + " quedó en trámite: "
-                + "el servicio de pagos no respondió y lo volvemos a intentar solo.";
+        return "Cancelaste la reserva. La devolución de " + amount + " está en trámite: "
+                + "el servicio de pagos todavía no la aceptó y la volvemos a pedir sola en un minuto.";
     }
 }
