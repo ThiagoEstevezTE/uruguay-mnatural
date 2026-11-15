@@ -71,7 +71,7 @@
                     <p class="small text-muted mb-0 mt-1">El banco puede tardar unos días en mostrarlo en tu resumen.</p>
                 </div>
                 <p class="mb-0 mt-3 pt-3 border-top small text-muted"
-                   th:if="${booking.refund == null and booking.cancelledBy?.name() == 'TOURIST' and booking.approvedPayment != null and booking.activity.touristRefundPercentage == 0}">
+                   th:if="${booking.refund == null and booking.cancelledBy?.name() == 'TOURIST' and booking.approvedPayment != null and booking.touristRefundPercentage == 0}">
                     Esta actividad no devuelve el pago cuando cancela el turista.
                 </p>
             </div>
@@ -119,13 +119,13 @@
                   th:with="paid=${booking.status.name() == 'CONFIRMED'},
                            refundText=${'$ ' + #numbers.formatDecimal(refundIfCancelled, 1, 'POINT', 0, 'COMMA')}"
                   th:attr="data-confirm=${paid}
-                        ? ${'Si cancelás, se te devuelven ' + refundText + ' (' + booking.activity.touristRefundPercentage + ' % de lo que pagaste). ¿Cancelar la reserva?'}
+                        ? ${'Si cancelás, se te devuelven ' + refundText + ' (' + booking.touristRefundPercentage + ' % de lo que pagaste). ¿Cancelar la reserva?'}
                         : '¿Seguro que querés cancelar la reserva?'"
                   onsubmit="return confirm(this.dataset.confirm);">
                 <p class="small text-muted mb-2" th:if="${paid}">
                     <i class="bi bi-info-circle"></i>
                     Si cancelás, se te devuelven <strong th:text="${refundText}"></strong>
-                    (<span th:text="${booking.activity.touristRefundPercentage}"></span> % de lo que pagaste), según la política del prestador.
+                    (<span th:text="${booking.touristRefundPercentage}"></span> % de lo que pagaste), según la política del prestador.
                 </p>
                 <button type="submit" class="btn btn-outline-danger"><i class="bi bi-x-lg"></i> Cancelar reserva</button>
             </form>

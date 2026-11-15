@@ -39,12 +39,12 @@ public class RefundService {
 
     // Porcentaje que corresponde segun quien cancela
     public int refundPercentage(Booking booking, CancelledBy who) {
-        return who == CancelledBy.PROVIDER ? 100 : booking.getActivity().getTouristRefundPercentage();
+        return who == CancelledBy.PROVIDER ? 100 : booking.getTouristRefundPercentage();
     }
 
     // Lo que se le devolveria al turista si cancela ahora (para avisarle antes de que confirme)
     public BigDecimal touristRefundAmount(Booking booking) {
-        return amountFor(booking.getTotalAmount(), booking.getActivity().getTouristRefundPercentage());
+        return amountFor(booking.getTotalAmount(), booking.getTouristRefundPercentage());
     }
 
     // Se llama al cancelar. Si la reserva no estaba pagada o el porcentaje es 0, no hay nada que devolver.

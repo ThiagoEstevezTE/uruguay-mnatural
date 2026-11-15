@@ -469,7 +469,7 @@ class BookingServiceTest {
 
     @Test
     void zeroPercentMeansNoRefund() throws Exception {
-        trekking.setRefundPercentage(0);
+        trekking.setRefundPercentage(0);           // la politica al momento de reservar
         Booking booking = paidBooking();
 
         Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
@@ -555,5 +555,16 @@ class BookingServiceTest {
 
         assertEquals(key, RefundService.idempotencyKey(cancelled.getRefund()));
         assertEquals(key, java.util.UUID.fromString(key).toString());
+    }
+
+    @Test
+    void refundUsesThePolicyFromWhenTheTouristBooked() throws Exception {
+        Booking booking = paidBooking();          // el trekking devolvia el 80 % al reservar
+        trekking.setRefundPercentage(0);           // despues el prestador lo baja
+
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        assertEquals(80, cancelled.getRefund().getPercentage());
+        assertEquals(0, new BigDecimal("1920.00").compareTo(cancelled.getRefund().getAmount()));
     }
 }
