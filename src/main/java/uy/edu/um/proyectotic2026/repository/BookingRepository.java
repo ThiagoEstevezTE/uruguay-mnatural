@@ -28,6 +28,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByInstanceId(Long instanceId);
 
+    // Las reservas de una fecha, bloqueadas: si el turista cancela justo cuando el prestador cancela la fecha,
+    // uno espera al otro y no se devuelve dos veces
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<Booking> findLockedByInstanceId(Long instanceId);
+
     // Reservas de todas las actividades de un prestador, por fecha de la actividad
     @EntityGraph(attributePaths = {"rating", "refund"})
     List<Booking> findByInstanceActivityBusinessProviderEmailOrderByInstanceStartDateTimeAsc(String providerEmail);

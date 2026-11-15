@@ -137,6 +137,8 @@ public class BookingService {
                 .totalAmount(totalAmount)
                 .createdAt(now)
                 .expiresAt(expiresAt)
+                // La politica de devolucion vale la del momento de reservar, aunque el prestador la cambie despues
+                .refundPercentage(activity.isAllowsCancellation() ? activity.getTouristRefundPercentage() : null)
                 .build();
         checkedPeople.forEach(booking::addPerson);
 
@@ -402,9 +404,7 @@ public class BookingService {
         instanceRepo.save(instance);
 
         int cancelled = 0;
-        for (Booking found : bookingRepo.findByInstanceId(instanceId)) {
-            // Se bloquea cada reserva: si el turista la cancela justo a la vez, no se devuelve dos veces
-            Booking booking = bookingRepo.findLockedById(found.getId()).orElseThrow();
+        for (Booking booking : bookingRepo.findLockedByInstanceId(instanceId)) {
             if (booking.getStatus() == BookingStatus.PENDING || booking.getStatus() == BookingStatus.CONFIRMED) {
                 cancel(booking, CancelledBy.PROVIDER);
                 cancelled++;

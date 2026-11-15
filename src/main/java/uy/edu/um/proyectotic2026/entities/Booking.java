@@ -72,6 +72,10 @@ public class Booking {
     @OneToOne(mappedBy = "booking")
     private Rating rating;
 
+    // Porcentaje que se le devuelve al turista si cancela, copiado de la actividad al reservar.
+    // null = reservas de antes de este campo: vale el de la actividad.
+    private Integer refundPercentage;
+
     // Las personas que van, con nombre, apellido, documento y edad
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id ASC")
@@ -81,6 +85,10 @@ public class Booking {
     // La devolucion de la plata, si se cancelo despues de pagar
     @OneToOne(mappedBy = "booking")
     private Refund refund;
+
+    public int getTouristRefundPercentage() {
+        return refundPercentage != null ? refundPercentage : getActivity().getTouristRefundPercentage();
+    }
 
     public void addPerson(BookingParticipant person) {
         person.setBooking(this);
