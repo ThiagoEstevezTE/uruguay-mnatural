@@ -69,7 +69,7 @@ Cualquiera puede buscar actividades y ver sus detalles sin registrarse. La cuent
 ### Crear una cuenta o ingresar
 
 1. Para ser turista: **Crear cuenta**, arriba a la derecha. Pide nombre, apellido, documento, fecha de nacimiento, email y contraseña.
-2. Para ofrecer actividades: **Soy prestador**. Se cargan los datos del prestador (empresa o particular) y los del emprendimiento, que queda *pendiente* hasta que lo aprueba el administrador.
+2. Para ofrecer actividades: **Soy prestador**. Se cargan los datos del prestador (empresa o particular) y los del emprendimiento, que queda *pendiente* hasta que lo aprueba el administrador. Cada prestador tiene un solo emprendimiento, y no se puede registrar dos veces el mismo documento.
 3. Si ya tenés cuenta: **Ingresar**, con el email y la contraseña.
 
 ![La pantalla para ingresar](guia-img/05-login.jpg)

@@ -18,8 +18,9 @@ public class Business {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Cada prestador tiene un solo emprendimiento: la base no deja guardar un segundo
     @ManyToOne
-    @JoinColumn(name = "provider_id", nullable = false)
+    @JoinColumn(name = "provider_id", nullable = false, unique = true)
     private Provider provider;
 
     @ManyToOne

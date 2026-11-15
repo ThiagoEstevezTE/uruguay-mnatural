@@ -33,7 +33,10 @@ public class Provider extends User {
     @Builder.Default
     private List<Business> businesses = new ArrayList<>();
 
+    // Cada prestador puede tener un solo emprendimiento
     public void addBusiness(Business business) {
+        if (!businesses.isEmpty())
+            throw new IllegalStateException("Cada prestador puede tener un solo emprendimiento");
         business.setProvider(this);
         businesses.add(business);
     }
