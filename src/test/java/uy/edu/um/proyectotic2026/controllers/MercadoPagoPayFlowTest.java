@@ -84,7 +84,7 @@ class MercadoPagoPayFlowTest {
     void approvedTokenConfirmsBooking() throws Exception {
         ChargeResponseDTO approved = new ChargeResponseDTO("approved", "123", "Pago aprobado");
         approved.setCardLastDigits("0604");
-        when(mercadoPago.pay(any(), any(), anyString())).thenReturn(approved);
+        when(mercadoPago.pay(any(), any(), anyString(), anyString())).thenReturn(approved);
 
         mvc.perform(post(newPendingBookingPayUrl() + "-mp").with(csrf())
                         .param("token", "tok_1").param("paymentMethodId", "master")
@@ -100,7 +100,7 @@ class MercadoPagoPayFlowTest {
     @Test
     @WithMockUser(username = "turista@demo.uy", roles = "TOURIST")
     void rejectedTokenKeepsBookingPending() throws Exception {
-        when(mercadoPago.pay(any(), any(), anyString()))
+        when(mercadoPago.pay(any(), any(), anyString(), anyString()))
                 .thenReturn(new ChargeResponseDTO("rejected", "124", "cc_rejected_other_reason"));
 
         mvc.perform(post(newPendingBookingPayUrl() + "-mp").with(csrf())

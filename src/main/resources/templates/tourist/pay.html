@@ -28,6 +28,8 @@
                 <form id="mp-form" th:action="@{/tourist/bookings/{id}/pay-mp(id=${booking.id})}" method="post">
                     <input type="hidden" name="token">
                     <input type="hidden" name="paymentMethodId">
+                    <input type="hidden" name="paymentTypeId">
+                    <input type="hidden" name="cardLastDigits">
                     <input type="hidden" name="issuerId">
                     <input type="hidden" name="installments">
                     <input type="hidden" name="payerEmail">
@@ -97,12 +99,14 @@
             callbacks: {
                 onReady: () => {},
                 onError: (error) => console.error(error),
-                onSubmit: (data) => {
+                onSubmit: (data, extra) => {
                     // Se manda con un form comun: asi viaja el token CSRF de Spring
                     const fields = document.getElementById('mp-form').elements;
                     fields['token'].value = data.token;
                     fields['paymentMethodId'].value = data.payment_method_id;
                     fields['issuerId'].value = data.issuer_id || '';
+                    fields['paymentTypeId'].value = (extra && extra.paymentTypeId) || data.payment_type_id || '';
+                    fields['cardLastDigits'].value = (extra && extra.lastFourDigits) || '';
                     fields['installments'].value = data.installments;
                     fields['payerEmail'].value = data.payer.email;
                     fields['identificationType'].value = data.payer.identification ? data.payer.identification.type : '';

@@ -201,7 +201,7 @@ public class BookingService {
 
         try {
             ChargeResponseDTO response = mercadoPago.pay(data, booking.getTotalAmount(),
-                    paymentDescription(booking));
+                    booking.getCode(), paymentDescription(booking));
             payment.setCardLastDigits(response.getCardLastDigits());
             return applyPaymentResult(booking, payment, response);
         } catch (PaymentUnavailableException e) {

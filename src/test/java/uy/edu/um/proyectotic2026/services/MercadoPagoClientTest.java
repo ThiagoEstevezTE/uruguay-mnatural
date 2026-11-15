@@ -27,7 +27,7 @@ class MercadoPagoClientTest {
     @BeforeEach
     void startServer() throws Exception {
         server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-        server.createContext("/v1/payments", exchange -> {
+        server.createContext("/v1/orders", exchange -> {
             receivedBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             receivedAuth = exchange.getRequestHeaders().getFirst("Authorization");
             receivedKey = exchange.getRequestHeaders().getFirst("X-Idempotency-Key");
@@ -53,6 +53,8 @@ class MercadoPagoClientTest {
         MercadoPagoPaymentDTO data = new MercadoPagoPaymentDTO();
         data.setToken("tok_1");
         data.setPaymentMethodId("master");
+        data.setPaymentTypeId("credit_card");
+        data.setCardLastDigits("0604");
         data.setIssuerId("310");
         data.setInstallments(1);
         data.setPayerEmail("comprador@test.uy");
@@ -61,41 +63,111 @@ class MercadoPagoClientTest {
         return data;
     }
 
-    @Test
-    void approvedPaymentSendsWhatMercadoPagoAsksFor() throws Exception {
-        responseStatus = 201;
-        responseBody = "{\"id\":123,\"status\":\"approved\",\"status_detail\":\"accredited\",\"card\":{\"last_four_digits\":\"0604\"}}";
+    private static final String APPROVED = "{\"id\":\"ORDTST01\",\"status\":\"processed\",\"status_detail\":\"accredited\","
+            + "\"transactions\":{\"payments\":[{\"id\":\"PAY01\",\"status\":\"processed\",\"status_detail\":\"accredited\"}]}}";
 
-        ChargeResponseDTO result = client().pay(data(), new BigDecimal("1500.00"), "Reserva UM-1");
+    // Asi responde Mercado Pago cuando la tarjeta se rechaza (titular OTHE): 402 y la orden adentro de "data"
+    private static final String REJECTED = "{\"errors\":[{\"code\":\"failed\"}],\"data\":{\"id\":\"ORDTST02\",\"status\":\"failed\","
+            + "\"status_detail\":\"failed\",\"transactions\":{\"payments\":[{\"id\":\"PAY02\",\"status\":\"failed\","
+            + "\"status_detail\":\"rejected_by_issuer\"}]}}}";
+
+    @Test
+    void approvedOrderSendsWhatMercadoPagoAsksFor() throws Exception {
+        responseStatus = 201;
+        responseBody = APPROVED;
+
+        ChargeResponseDTO result = client().pay(data(), new BigDecimal("1500"), "UM-1", "Reserva UM-1");
 
         assertTrue(result.isApproved());
-        assertEquals("123", result.getTransactionId());
+        assertEquals("ORDTST01", result.getTransactionId());
         assertEquals("0604", result.getCardLastDigits());
         assertEquals("Bearer token-de-prueba", receivedAuth);
         assertNotNull(receivedKey);
-        assertTrue(receivedBody.contains("\"transaction_amount\":1500.00"));
+        assertTrue(receivedBody.contains("\"type\":\"online\""));
+        assertTrue(receivedBody.contains("\"total_amount\":\"1500.00\""));
+        assertTrue(receivedBody.contains("\"amount\":\"1500.00\""));
+        assertTrue(receivedBody.contains("\"external_reference\":\"UM-1\""));
         assertTrue(receivedBody.contains("\"token\":\"tok_1\""));
-        assertTrue(receivedBody.contains("\"payment_method_id\":\"master\""));
+        assertTrue(receivedBody.contains("\"id\":\"master\""));
+        assertTrue(receivedBody.contains("\"type\":\"credit_card\""));
         assertTrue(receivedBody.contains("\"number\":\"12345678\""));
     }
 
     @Test
-    void rejectedPaymentIsNotApproved() throws Exception {
+    void debitCardIsSentAsDebit() throws Exception {
         responseStatus = 201;
-        responseBody = "{\"id\":124,\"status\":\"rejected\",\"status_detail\":\"cc_rejected_other_reason\"}";
+        responseBody = APPROVED;
+        MercadoPagoPaymentDTO debit = data();
+        debit.setPaymentTypeId("debit_card");
 
-        ChargeResponseDTO result = client().pay(data(), BigDecimal.TEN, "Reserva UM-1");
+        client().pay(debit, BigDecimal.TEN, "UM-1", "Reserva UM-1");
+
+        assertTrue(receivedBody.contains("\"type\":\"debit_card\""));
+    }
+
+    @Test
+    void unknownCardTypeIsSentAsCredit() throws Exception {
+        responseStatus = 201;
+        responseBody = APPROVED;
+        MercadoPagoPaymentDTO weird = data();
+        weird.setPaymentTypeId("<script>");
+
+        client().pay(weird, BigDecimal.TEN, "UM-1", "Reserva UM-1");
+
+        assertTrue(receivedBody.contains("\"type\":\"credit_card\""));
+        assertFalse(receivedBody.contains("<script>"));
+    }
+
+    @Test
+    void lastDigitsThatAreNotFourNumbersAreIgnored() throws Exception {
+        responseStatus = 201;
+        responseBody = APPROVED;
+        MercadoPagoPaymentDTO bad = data();
+        bad.setCardLastDigits("12ab");
+
+        ChargeResponseDTO result = client().pay(bad, BigDecimal.TEN, "UM-1", "Reserva UM-1");
+
+        assertTrue(result.isApproved());
+        assertNull(result.getCardLastDigits());
+    }
+
+    @Test
+    void rejectedCardIsNotApprovedAndExplainsWhy() throws Exception {
+        responseStatus = 402;
+        responseBody = REJECTED;
+
+        ChargeResponseDTO result = client().pay(data(), BigDecimal.TEN, "UM-1", "Reserva UM-1");
 
         assertFalse(result.isApproved());
-        assertEquals("cc_rejected_other_reason", result.getMessage());
+        assertEquals("ORDTST02", result.getTransactionId());
+        assertEquals("el banco no lo aprobó", result.getMessage());
+        assertEquals("0604", result.getCardLastDigits());
     }
 
     @Test
     void badCredentialsAreReportedAsUnavailable() {
         responseStatus = 401;
-        responseBody = "{\"message\":\"invalid_token\"}";
+        responseBody = "{\"message\":\"Unauthorized use of live credentials\"}";
 
         assertThrows(PaymentUnavailableException.class,
-                () -> client().pay(data(), BigDecimal.TEN, "Reserva UM-1"));
+                () -> client().pay(data(), BigDecimal.TEN, "UM-1", "Reserva UM-1"));
+    }
+
+    @Test
+    void invalidDataIsReportedAsUnavailable() {
+        responseStatus = 400;
+        responseBody = "{\"errors\":[{\"code\":\"invalid_properties\"}]}";
+
+        assertThrows(PaymentUnavailableException.class,
+                () -> client().pay(data(), BigDecimal.TEN, "UM-1", "Reserva UM-1"));
+    }
+
+    @Test
+    void answerWithoutOrderIsReportedAsUnavailable() {
+        responseStatus = 201;
+        responseBody = "{}";
+
+        assertThrows(PaymentUnavailableException.class,
+                () -> client().pay(data(), BigDecimal.TEN, "UM-1", "Reserva UM-1"));
     }
 }
