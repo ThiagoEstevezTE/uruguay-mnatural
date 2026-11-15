@@ -72,6 +72,26 @@ public class Booking {
     @OneToOne(mappedBy = "booking")
     private Rating rating;
 
+    // Las personas que van, con nombre, apellido, documento y edad
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id ASC")
+    @Builder.Default
+    private List<BookingParticipant> people = new ArrayList<>();
+
+    // La devolucion de la plata, si se cancelo despues de pagar
+    @OneToOne(mappedBy = "booking")
+    private Refund refund;
+
+    public void addPerson(BookingParticipant person) {
+        person.setBooking(this);
+        people.add(person);
+    }
+
+    // El pago aprobado de la reserva (hay uno solo: despues de aprobarse ya no se puede volver a pagar)
+    public Payment getApprovedPayment() {
+        return payments.stream().filter(p -> p.getStatus() == PaymentStatus.APPROVED).findFirst().orElse(null);
+    }
+
     public Activity getActivity() {
         return instance.getActivity();
     }

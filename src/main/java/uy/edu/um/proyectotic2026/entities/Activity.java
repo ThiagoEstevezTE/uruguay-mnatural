@@ -63,6 +63,10 @@ public class Activity {
 
     private Integer cancellationMinHours;
 
+    // Porcentaje del pago que se le devuelve al turista si cancela (lo fija el prestador al crear la actividad).
+    // Si cancela el prestador se devuelve siempre el 100 %. null = 100 % (actividades de antes de este campo).
+    private Integer refundPercentage;
+
     @Builder.Default
     @Column(nullable = false)
     private boolean published = true;
@@ -105,6 +109,10 @@ public class Activity {
                 .filter(i -> i.getStatus() == InstanceStatus.SCHEDULED)
                 .filter(i -> i.getBookingDeadline().isAfter(now))
                 .toList();
+    }
+
+    public int getTouristRefundPercentage() {
+        return refundPercentage == null ? 100 : refundPercentage;
     }
 
     // Nombres de los tipos en orden alfabetico (para mostrar etiquetas)

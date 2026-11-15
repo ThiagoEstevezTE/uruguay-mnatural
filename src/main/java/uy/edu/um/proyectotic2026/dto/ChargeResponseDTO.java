@@ -17,9 +17,10 @@ public class ChargeResponseDTO {
     private String transactionId;
     private String message;
     private String cardLastDigits;  // Solo lo completa Mercado Pago
+    private String paymentId;       // Solo Mercado Pago: el pago adentro de la orden (para devolver una parte)
 
     public ChargeResponseDTO(String status, String transactionId, String message) {
-        this(status, transactionId, message, null);
+        this(status, transactionId, message, null, null);
     }
 
     public boolean isApproved() {

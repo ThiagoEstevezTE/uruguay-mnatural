@@ -29,6 +29,7 @@ public class ActivityDTO {
     private Integer maxParticipantsPerBooking;
     private boolean allowsCancellation;
     private Integer cancellationMinHours;
+    private Integer refundPercentage;
     private boolean published = true;
 
     private List<Long> typeIds = new ArrayList<>();
@@ -51,6 +52,7 @@ public class ActivityDTO {
         dto.setMaxParticipantsPerBooking(activity.getMaxParticipantsPerBooking());
         dto.setAllowsCancellation(activity.isAllowsCancellation());
         dto.setCancellationMinHours(activity.getCancellationMinHours());
+        dto.setRefundPercentage(activity.getRefundPercentage());
         dto.setPublished(activity.isPublished());
 
         for (ActivityType type : activity.getTypes())

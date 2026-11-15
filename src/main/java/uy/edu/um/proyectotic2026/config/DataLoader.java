@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Period;
 
 // Carga datos de ejemplo al arrancar la app, para poder mostrar el sistema funcionando.
 // Las cuentas de prueba estan en el README.
@@ -164,7 +165,7 @@ public class DataLoader implements CommandLineRunner {
         Activity a = createActivity(polonio, "Cabalgata al atardecer por las dunas", "Cabo Polonio",
                 "Recorremos a caballo las dunas móviles de Cabo Polonio hasta la costa, para ver la puesta de sol "
                         + "frente al faro. Caballos mansos, aptos para principiantes, y guía baqueano durante todo el paseo.",
-                150, 2500, 12, 60, true, 24, "Cabalgata", "Turismo de naturaleza");
+                150, 2500, 12, 60, true, 24, 50, "Cabalgata", "Turismo de naturaleza");
         a.addEquipment(equipment("Casco"), true);
         a.addEquipment(equipment("Calzado deportivo"), false);
         a.addEquipment(equipment("Protector solar"), false);
@@ -173,14 +174,14 @@ public class DataLoader implements CommandLineRunner {
         a = createActivity(polonio, "Avistaje de lobos marinos", "Cabo Polonio",
                 "Caminata guiada hasta la lobería de la Isla de Torres, con explicación sobre la fauna marina del "
                         + "área protegida y el faro.",
-                90, 900, null, 0, true, 2, "Turismo de naturaleza", "Senderismo");
+                90, 900, null, 0, true, 2, 100, "Turismo de naturaleza", "Senderismo");
         a.addEquipment(equipment("Agua"), false);
         addInstances(a, LocalTime.of(10, 30), 0, 1, 2, 4, 6, 9);
 
         a = createActivity(sierras, "Trekking al Salto del Penitente", "Villa Serrana",
                 "Trekking de dificultad media por senderos de sierra hasta la cascada del Salto del Penitente. "
                         + "Incluye merienda de campo al regreso.",
-                240, 1200, 10, 120, true, 48, "Trekking", "Senderismo", "Turismo de naturaleza");
+                240, 1200, 10, 120, true, 48, 80, "Trekking", "Senderismo", "Turismo de naturaleza");
         a.addEquipment(equipment("Calzado deportivo"), false);
         a.addEquipment(equipment("Agua"), false);
         a.addEquipment(equipment("Ropa de abrigo"), false);
@@ -189,7 +190,7 @@ public class DataLoader implements CommandLineRunner {
         a = createActivity(sierras, "Rappel en Villa Serrana", "Villa Serrana",
                 "Bautismo de rappel en paredes de 25 metros con instructores certificados. Primero hay una "
                         + "práctica en piso y después el descenso.",
-                180, 1800, 14, 180, false, null, "Aventura");
+                180, 1800, 14, 180, false, null, null, "Aventura");
         a.addEquipment(equipment("Casco"), true);
         a.addEquipment(equipment("Arnés"), true);
         a.addEquipment(equipment("Calzado deportivo"), false);
@@ -198,19 +199,19 @@ public class DataLoader implements CommandLineRunner {
         a = createActivity(colonia, "Recorrido por el Barrio Histórico", "Colonia del Sacramento",
                 "Caminata guiada por el Barrio Histórico, Patrimonio de la Humanidad: la Calle de los Suspiros, "
                         + "el Portón de Campo, el faro y la historia de la ciudad portuguesa y española.",
-                120, 800, null, 0, true, 12, "Recorrido histórico");
+                120, 800, null, 0, true, 12, 100, "Recorrido histórico");
         addInstances(a, LocalTime.of(11, 0), 0, 1, 2, 3, 4, 5, 6, 7);
 
         a = createActivity(colonia, "Cata de vinos y quesos de Colonia", "Colonia del Sacramento",
                 "Degustación de cinco vinos de bodegas de Colonia, con quesos artesanales de la zona y la "
                         + "explicación de un sommelier.",
-                90, 2200, 18, 120, true, 24, "Gastronomía", "Enoturismo");
+                90, 2200, 18, 120, true, 24, 50, "Gastronomía", "Enoturismo");
         addInstances(a, LocalTime.of(19, 30), 1, 4, 8, 11);
 
         a = createActivity(kayak, "Kayak a la Isla Gorriti", "Punta del Este",
                 "Salida en kayak doble desde el Puerto de Punta del Este hasta la Isla Gorriti, con parada para "
                         + "caminar por la isla y ver los restos de las baterías históricas.",
-                180, 1600, 12, 60, true, 24, "Actividad acuática", "Aventura");
+                180, 1600, 12, 60, true, 24, 70, "Actividad acuática", "Aventura");
         a.addEquipment(equipment("Kayak y remo"), true);
         a.addEquipment(equipment("Chaleco salvavidas"), true);
         a.addEquipment(equipment("Protector solar"), false);
@@ -293,7 +294,8 @@ public class DataLoader implements CommandLineRunner {
 
     private Activity createActivity(Business business, String name, String localityName, String description,
                                     int durationMinutes, int price, Integer minimumAge, int bookingLimitMinutes,
-                                    boolean allowsCancellation, Integer cancellationMinHours, String... typeNames) {
+                                    boolean allowsCancellation, Integer cancellationMinHours, Integer refundPercentage,
+                                    String... typeNames) {
 
         Activity activity = Activity.builder()
                 .business(business)
@@ -306,6 +308,7 @@ public class DataLoader implements CommandLineRunner {
                 .bookingLimitMinutes(bookingLimitMinutes)
                 .allowsCancellation(allowsCancellation)
                 .cancellationMinHours(cancellationMinHours)
+                .refundPercentage(refundPercentage)
                 .build();
 
         for (String typeName : typeNames)
@@ -342,6 +345,10 @@ public class DataLoader implements CommandLineRunner {
         return addInstance(activity, LocalDate.now().minusDays(daysAgo).atTime(time));
     }
 
+    // Acompañantes de ejemplo: nombre, comienzo del documento y edad
+    private static final String[][] COMPANIONS = {
+            {"Martina", "463821", "34"}, {"Joaquín", "512907", "15"}, {"Valentina", "498832", "12"}};
+
     // Crea una reserva ya pagada (con su pago aprobado) en el estado indicado
     private Booking booking(ActivityInstance instance, String touristEmail, int participants,
                             BookingStatus status, String code) {
@@ -361,11 +368,30 @@ public class DataLoader implements CommandLineRunner {
                 .checkinDate(status == BookingStatus.COMPLETED ? instance.getStartDateTime() : null)
                 .build();
 
+        // La primera persona es el turista; el resto, acompañantes de ejemplo
+        Tourist tourist = booking.getTourist();
+        booking.addPerson(BookingParticipant.builder()
+                .firstName(tourist.getFirstName())
+                .lastName(tourist.getLastName())
+                .document(tourist.getDocument())
+                .age(Period.between(tourist.getBirthDate(), LocalDate.now()).getYears())
+                .build());
+        for (int i = 1; i < participants; i++) {
+            String[] companion = COMPANIONS[(i - 1) % COMPANIONS.length];
+            booking.addPerson(BookingParticipant.builder()
+                    .firstName(companion[0])
+                    .lastName(tourist.getLastName())
+                    .document(companion[1] + code.substring(3, 5))
+                    .age(Integer.parseInt(companion[2]))
+                    .build());
+        }
+
         booking.getPayments().add(Payment.builder()
                 .booking(booking)
                 .amount(total)
                 .status(PaymentStatus.APPROVED)
                 .externalTransactionId("txn_demo_" + code.substring(3).toLowerCase())
+                .provider(PaymentProvider.SIMULATOR)
                 .cardBrand("Visa")
                 .cardLastDigits("4242")
                 .message("Pago aprobado")

@@ -128,6 +128,7 @@ public class ActivityService {
         activity.setMaxParticipantsPerBooking(dto.getMaxParticipantsPerBooking());
         activity.setAllowsCancellation(dto.isAllowsCancellation());
         activity.setCancellationMinHours(dto.isAllowsCancellation() ? dto.getCancellationMinHours() : null);
+        activity.setRefundPercentage(dto.isAllowsCancellation() ? dto.getRefundPercentage() : null);
         activity.setPublished(dto.isPublished());
 
         activity.setTypes(new HashSet<>(typeRepo.findAllById(dto.getTypeIds())));
@@ -166,6 +167,11 @@ public class ActivityService {
 
         if (dto.isAllowsCancellation() && (dto.getCancellationMinHours() == null || dto.getCancellationMinHours() < 0))
             throw new InvalidDataException("Indicá con cuántas horas de anticipación se puede cancelar");
+
+        // El prestador decide de antemano cuanto se devuelve si cancela el turista
+        if (dto.isAllowsCancellation() && (dto.getRefundPercentage() == null
+                || dto.getRefundPercentage() < 0 || dto.getRefundPercentage() > 100))
+            throw new InvalidDataException("Indicá qué porcentaje se le devuelve al turista si cancela (de 0 a 100)");
     }
 
     private boolean isBlank(String value) {

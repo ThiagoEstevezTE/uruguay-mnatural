@@ -31,8 +31,15 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus status;
 
-    // Identificador que devuelve el servicio de pagos externo
+    // Identificador que devuelve el servicio de pagos externo (en Mercado Pago, el de la orden)
     private String externalTransactionId;
+
+    // En Mercado Pago, el pago adentro de la orden: hace falta para devolver una parte
+    private String externalPaymentId;
+
+    // Quien lo cobro: la devolucion se le pide al mismo
+    @Enumerated(EnumType.STRING)
+    private PaymentProvider provider;
 
     // De la tarjeta solo se guardan la marca y los ultimos 4 numeros
     private String cardBrand;
