@@ -131,6 +131,12 @@ public class MercadoPagoClient {
                 String.valueOf(order.get("id")),
                 approved ? "Pago aprobado" : REJECTIONS.getOrDefault(detail, detail));
 
+        // El pago adentro de la orden: hace falta para devolver solo una parte
+        Map<?, ?> payment = firstPayment(order);
+        if (payment != null && payment.get("id") != null) {
+            result.setPaymentId(String.valueOf(payment.get("id")));
+        }
+
         // La orden no trae los ultimos 4 numeros: los da el formulario de Mercado Pago (solo para mostrar)
         if (cardLastDigits != null && cardLastDigits.matches("\\d{4}")) {
             result.setCardLastDigits(cardLastDigits);
@@ -140,13 +146,83 @@ public class MercadoPagoClient {
 
     // El motivo esta en el pago de la orden (ej. "accredited" o "rejected_by_issuer")
     private String paymentStatusDetail(Map<?, ?> order) {
-        if (order.get("transactions") instanceof Map<?, ?> transactions
-                && transactions.get("payments") instanceof List<?> payments
-                && !payments.isEmpty()
-                && payments.get(0) instanceof Map<?, ?> payment
-                && payment.get("status_detail") != null) {
+        Map<?, ?> payment = firstPayment(order);
+        if (payment != null && payment.get("status_detail") != null) {
             return String.valueOf(payment.get("status_detail"));
         }
         return String.valueOf(order.get("status_detail"));
+    }
+
+    private Map<?, ?> firstPayment(Map<?, ?> order) {
+        if (order.get("transactions") instanceof Map<?, ?> transactions
+                && transactions.get("payments") instanceof List<?> payments
+                && !payments.isEmpty()
+                && payments.get(0) instanceof Map<?, ?> payment) {
+            return payment;
+        }
+        return null;
+    }
+
+    // ---------- Devoluciones ----------
+
+    // Devuelve plata de una orden ya cobrada (POST /v1/orders/{id}/refund).
+    // Sin cuerpo, Mercado Pago devuelve todo; para devolver una parte hay que mandar el pago y el monto.
+    // Devuelve el identificador de la devolucion.
+    public String refund(String orderId, String paymentId, BigDecimal amount, boolean total)
+            throws PaymentUnavailableException {
+
+        Map<String, Object> body = null;
+        if (!total) {
+            String refundPaymentId = paymentId != null ? paymentId : findPaymentId(orderId);
+            body = Map.of("transactions", List.of(Map.of(
+                    "id", refundPaymentId,
+                    "amount", amount.setScale(2, RoundingMode.HALF_UP).toPlainString())));
+        }
+
+        try {
+            var request = restClient.post()
+                    .uri("/v1/orders/{id}/refund", orderId)
+                    // Si se reintenta, Mercado Pago no devuelve dos veces lo mismo dentro de la misma llamada
+                    .header("X-Idempotency-Key", UUID.randomUUID().toString());
+            if (body != null) {
+                request = request.contentType(MediaType.APPLICATION_JSON).body(body);
+            }
+            Map<?, ?> response = request.exchange((req, res) -> {
+                if (res.getStatusCode().is2xxSuccessful()) {
+                    return res.bodyTo(Map.class);
+                }
+                String error = new String(res.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                throw new RestClientException("Mercado Pago respondio " + res.getStatusCode().value() + ": " + error);
+            });
+            return refundId(response, orderId);
+        } catch (RestClientException e) {
+            log.error("Fallo la devolucion con Mercado Pago (orden {}): {}", orderId, e.getMessage());
+            throw new PaymentUnavailableException("No se pudo hacer la devolución en este momento");
+        }
+    }
+
+    // Pagos viejos que no guardaron el id del pago: se lo pide a Mercado Pago (GET /v1/orders/{id})
+    private String findPaymentId(String orderId) throws PaymentUnavailableException {
+        try {
+            Map<?, ?> order = restClient.get().uri("/v1/orders/{id}", orderId).retrieve().body(Map.class);
+            Map<?, ?> payment = order == null ? null : firstPayment(order);
+            if (payment == null || payment.get("id") == null) {
+                throw new RestClientException("La orden " + orderId + " no tiene pagos");
+            }
+            return String.valueOf(payment.get("id"));
+        } catch (RestClientException e) {
+            log.error("No se pudo leer la orden {} de Mercado Pago: {}", orderId, e.getMessage());
+            throw new PaymentUnavailableException("No se pudo hacer la devolución en este momento");
+        }
+    }
+
+    // La devolucion queda en transactions.refunds de la orden; si no viene, se guarda el id de la orden
+    private String refundId(Map<?, ?> response, String orderId) {
+        if (response != null && response.get("transactions") instanceof Map<?, ?> transactions
+                && transactions.get("refunds") instanceof List<?> refunds && !refunds.isEmpty()
+                && refunds.get(refunds.size() - 1) instanceof Map<?, ?> refund && refund.get("id") != null) {
+            return String.valueOf(refund.get("id"));
+        }
+        return orderId;
     }
 }

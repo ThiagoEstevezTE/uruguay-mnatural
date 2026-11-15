@@ -68,7 +68,7 @@
                         </div>
                         <form th:if="${instance.status.name() == 'SCHEDULED' and instance.future}" class="d-flex gap-2"
                               method="post" th:action="@{/provider/instances/{id}/cancel(id=${instance.id})}"
-                              onsubmit="return confirm('Se van a cancelar también las reservas de esta fecha. ¿Seguir?');">
+                              onsubmit="return confirm('Se van a cancelar también las reservas de esta fecha y a los turistas que pagaron se les devuelve el 100 %. ¿Seguir?');">
                             <input type="hidden" name="activityId" th:value="${activity.id}">
                             <select name="reasonId" class="form-select form-select-sm" aria-label="Motivo de la cancelación" required>
                                 <option value="">Motivo...</option>

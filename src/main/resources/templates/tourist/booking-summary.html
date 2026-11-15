@@ -13,7 +13,11 @@
             <li class="mb-1"><i class="bi bi-geo-alt"></i>
                 <span th:text="${booking.activity.business.address + ', ' + booking.activity.locality.name}"></span></li>
             <li class="mb-1"><i class="bi bi-people"></i>
-                <span th:text="${booking.participants == 1} ? '1 persona' : ${booking.participants + ' personas'}"></span></li>
+                <span th:text="${booking.participants == 1} ? '1 persona' : ${booking.participants + ' personas'}"></span>
+                <ul class="list-unstyled mt-1 mb-0" th:unless="${booking.people.isEmpty()}">
+                    <li th:each="person : ${booking.people}" class="text-muted"
+                        th:text="${person.fullName + ' · ' + person.document + ' · ' + person.age + ' años'}"></li>
+                </ul></li>
             <li th:if="${booking.observations}"><i class="bi bi-chat-left-text"></i>
                 <span th:text="${booking.observations}"></span></li>
         </ul>

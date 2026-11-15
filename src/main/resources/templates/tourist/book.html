@@ -14,8 +14,8 @@
         <div class="col-lg-7">
             <form class="card card-um p-4" th:action="@{/tourist/book/{id}(id=${instance.id})}" method="post">
                 <label class="form-label fw-semibold" for="participants">¿Cuántas personas van?</label>
-                <input type="number" id="participants" name="participants" class="form-control mb-1"
-                       min="1" th:max="${activity.maxParticipantsPerBooking}" th:value="${participants ?: 1}" required>
+                <input type="number" id="participants" class="form-control mb-1"
+                       min="1" th:max="${activity.maxParticipantsPerBooking ?: 50}" th:value="${form.people.size()}" required>
                 <div class="form-text" th:if="${activity.maxParticipantsPerBooking}">
                     Máximo <span th:text="${activity.maxParticipantsPerBooking}"></span> personas por reserva.
                 </div>
@@ -23,10 +23,39 @@
                     Esta fecha tiene cupo de <span th:text="${instance.maxCapacity}"></span> personas.
                 </div>
 
+                <h2 class="h6 fw-semibold mt-2 mb-1">Datos de cada persona</h2>
+                <p class="form-text mt-0 mb-2">
+                    El prestador los necesita para saber quién va.
+                    La primera fila tiene tus datos: cambialos si no vas vos.
+                </p>
+                <div id="people" class="mb-3">
+                    <div class="person-row border rounded p-3 mb-2" th:each="person, row : ${form.people}">
+                        <div class="small fw-semibold text-muted mb-2" th:text="${'Persona ' + row.count}"></div>
+                        <div class="row g-2">
+                            <div class="col-sm-6 col-lg-3">
+                                <input type="text" class="form-control" placeholder="Nombre" aria-label="Nombre" maxlength="100" required
+                                       th:name="${'people[' + row.index + '].firstName'}" th:value="${person?.firstName}">
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <input type="text" class="form-control" placeholder="Apellido" aria-label="Apellido" maxlength="100" required
+                                       th:name="${'people[' + row.index + '].lastName'}" th:value="${person?.lastName}">
+                            </div>
+                            <div class="col-sm-8 col-lg-4">
+                                <input type="text" class="form-control" placeholder="Documento" aria-label="Documento" maxlength="20" required
+                                       th:name="${'people[' + row.index + '].document'}" th:value="${person?.document}">
+                            </div>
+                            <div class="col-sm-4 col-lg-2">
+                                <input type="number" class="form-control" placeholder="Edad" aria-label="Edad" min="0" max="120" required
+                                       th:name="${'people[' + row.index + '].age'}" th:value="${person?.age}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <label class="form-label fw-semibold" for="observations">Observaciones para el prestador (opcional)</label>
                 <textarea id="observations" name="observations" class="form-control mb-1" rows="3" maxlength="1000"
                           placeholder="Ej.: condiciones médicas, alergias, alguien que necesita ayuda..."
-                          th:text="${observations}"></textarea>
+                          th:text="${form.observations}"></textarea>
                 <div class="form-text mb-4">Solo las ve el prestador, para organizar la actividad.</div>
 
                 <div class="alert alert-light border small">
@@ -66,15 +95,36 @@
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 <script>
-    // Actualiza el total cuando cambia la cantidad de personas (el total real lo calcula el servidor)
+    // Cuando cambia la cantidad de personas: agrega o saca filas y actualiza el total.
+    // El total real y los controles los hace el servidor.
     const participants = document.getElementById('participants');
+    const people = document.getElementById('people');
     const total = document.getElementById('total');
-    function updateTotal() {
-        const amount = Number(total.dataset.price) * Math.max(1, Number(participants.value) || 1);
+
+    function newRow(index) {
+        const row = people.querySelector('.person-row').cloneNode(true);
+        row.querySelector('.text-muted').textContent = 'Persona ' + (index + 1);
+        row.querySelectorAll('input').forEach(input => {
+            input.name = input.name.replace(/people\[\d+\]/, 'people[' + index + ']');
+            input.value = '';
+        });
+        return row;
+    }
+
+    function update() {
+        const max = Number(participants.max) || 50;
+        const count = Math.min(max, Math.max(1, Number(participants.value) || 1));
+        let rows = people.querySelectorAll('.person-row');
+        for (let i = rows.length; i < count; i++)
+            people.appendChild(newRow(i));
+        rows = people.querySelectorAll('.person-row');
+        for (let i = rows.length - 1; i >= count; i--)
+            rows[i].remove();
+        const amount = Number(total.dataset.price) * count;
         total.textContent = '$ ' + amount.toLocaleString('es-UY');
     }
-    participants.addEventListener('input', updateTotal);
-    updateTotal();
+    participants.addEventListener('input', update);
+    update();
 </script>
 </body>
 </html>

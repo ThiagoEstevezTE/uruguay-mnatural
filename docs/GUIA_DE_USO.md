@@ -83,7 +83,7 @@ Con `turista@demo.uy`. Arriba aparece **Mis reservas**, donde el turista ve todo
 ### Reservar una actividad
 
 1. En el detalle de una actividad, tocá **Reservar** en la fecha que quieras.
-2. Poné cuántas personas van. El total se calcula solo.
+2. Poné cuántas personas van y completá nombre, apellido, documento y edad de cada una. La primera fila viene con tus datos: cambialos si no vas vos. Si alguien no llega a la edad mínima de la actividad, no deja reservar. El total se calcula solo.
 3. Si hace falta, escribí una observación para el prestador (por ejemplo, "Una persona es celíaca").
 4. Tocá **Continuar al pago**. El lugar queda guardado 2 horas mientras pagás.
 
@@ -108,6 +108,7 @@ Cuando el pago se aprueba, la reserva queda **Confirmada** y aparece la entrada 
 1. Tocá **Mis reservas** en el menú de arriba.
 2. Cada reserva muestra su estado: *Confirmada*, *Pendiente de pago* (con el botón **Pagar**) o *Realizada*.
 3. Para cancelar, entrá a **Ver detalle** y tocá **Cancelar reserva**. El botón aparece solo si falta más tiempo que el plazo de la actividad (en la cabalgata, 24 horas). Probalo con `UM-PROX7A`.
+4. Arriba del botón dice cuánto se te devuelve: el porcentaje que fijó el prestador (en la cabalgata, el 50 %). Al cancelar, la plata vuelve a la tarjeta y en el detalle queda el **Reembolso** con el monto. Si el servicio de pagos no responde, queda *en trámite* y se reintenta solo cada 5 minutos.
 
 ![Mis reservas](guia-img/11-mis-reservas.jpg)
 
@@ -136,7 +137,7 @@ Al ingresar se ve el emprendimiento con su estado (*Aprobado*) y la lista de sus
 1. En el panel, tocá **+ Nueva actividad**.
 2. Completá el nombre, la descripción, dónde se realiza, la duración en minutos, el precio por persona y la edad mínima (opcional).
 3. Marcá el tipo de actividad (por ejemplo Senderismo) y el equipamiento: qué da el prestador y qué tiene que traer el turista.
-4. Elegí cuándo cierran las reservas, si el turista puede cancelar y con cuánta anticipación, y si la actividad queda visible en el portal.
+4. Elegí cuándo cierran las reservas, si el turista puede cancelar, con cuánta anticipación y qué porcentaje se le devuelve si cancela, y si la actividad queda visible en el portal.
 5. Guardá. Después hay que agregarle fechas (paso siguiente).
 
 ![El formulario de nueva actividad](guia-img/14-nueva-actividad.jpg)
@@ -146,7 +147,7 @@ Al ingresar se ve el emprendimiento con su estado (*Aprobado*) y la lista de sus
 1. Entrá a una actividad con **Gestionar**.
 2. A la izquierda, elegí día y hora en **Inicio**. El cupo es opcional: vacío quiere decir sin cupo.
 3. Tocá **Agregar**. La fecha aparece en la lista y en el portal.
-4. Para cancelar una fecha, tocá **Cancelar fecha**. Sus reservas se cancelan solas.
+4. Para cancelar una fecha, elegí el motivo y tocá **Cancelar fecha**. Sus reservas se cancelan solas y a los turistas que ya pagaron se les devuelve el 100 %. En **Reservas** se ve cuánto se devolvió en cada una.
 
 ![Las fechas de una actividad](guia-img/15-actividad-fechas.jpg)
 

@@ -6,8 +6,9 @@ Esta guía explica, paso a paso, cómo bajar Uruguay Mnatural de GitHub y dejarl
 
 **Qué NO hace falta:**
 - instalar PostgreSQL;
-- crear la base de datos;
-- tener un archivo `.env` ni pedirle contraseñas a nadie.
+- crear la base de datos.
+
+Para pagar con Mercado Pago hace falta un archivo `.env` con sus claves (se copia de `.env.example` y las claves las pasa Thiago). Sin ese archivo, la app arranca igual con `PAYMENT_PROVIDER=simulator` en el `.env` y las tarjetas de prueba del simulador.
 
 La base la levanta Docker sola.
 
@@ -168,7 +169,7 @@ Si entraste y ves "Mis reservas" arriba, ya está todo funcionando.
 | `Cannot connect to the Docker daemon` o `error during connect` | Docker está instalado pero no está prendido. Abrilo y esperá a **Engine running**. |
 | `port is already allocated` o `5432 ... already in use` al hacer `docker compose up -d` | Ya tenés un PostgreSQL instalado y prendido en tu compu. Apagalo: en Windows, buscá **Servicios** en el menú Inicio → **postgresql** → **Detener**. Después probá de nuevo. |
 | La app no arranca y dice `Connection refused` o `Connection to localhost:5432 refused` | La base no está prendida. Hacé el paso 2 de la Parte 2 (`docker compose up -d`) y volvé a darle ▶. |
-| La app no arranca y dice `password authentication failed` | Hay un archivo `.env` en la carpeta del proyecto con otros datos. Borralo o cambiale el nombre. |
+| La app no arranca y dice `password authentication failed` | Casi siempre es un PostgreSQL instalado en Windows que contesta en el mismo puerto que el de Docker. Buscá **Servicios** en el menú Inicio → `postgresql-x64-…` → clic derecho → **Detener**, y en sus propiedades poné **Tipo de inicio: Manual**. Si sigue, fijate que el `.env` no tenga líneas `DB_…`. |
 | `Port 8080 was already in use` | Ya hay otra app usando ese puerto, seguramente otra copia de esta prendida. Parala con el ■ rojo. |
 | Error de Java: `invalid source release: 25` o parecido | Falta elegir Java 25 (Parte 1, paso 5). |
 | No aparece el ▶ verde | IntelliJ todavía está cargando: esperá a que se vaya la barrita de abajo a la derecha. Si sigue sin aparecer, hacé clic derecho en `pom.xml` → **Add as Maven Project** (o **Maven → Reload project**). |

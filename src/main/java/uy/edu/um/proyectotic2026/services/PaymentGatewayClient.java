@@ -8,6 +8,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import uy.edu.um.proyectotic2026.dto.ChargeRequestDTO;
 import uy.edu.um.proyectotic2026.dto.ChargeResponseDTO;
+import uy.edu.um.proyectotic2026.dto.RefundRequestDTO;
 import uy.edu.um.proyectotic2026.exceptions.PaymentUnavailableException;
 
 import java.math.BigDecimal;
@@ -46,6 +47,23 @@ public class PaymentGatewayClient {
                     .body(ChargeResponseDTO.class);
         } catch (RestClientException e) {
             // Error 5xx, tiempo de espera agotado o no se pudo conectar
+            throw new PaymentUnavailableException("El servicio de pagos no está disponible en este momento");
+        }
+    }
+
+    // Devuelve (todo o parte de) un pago. Devuelve el identificador de la devolucion.
+    public String refund(String transactionId, BigDecimal amount) throws PaymentUnavailableException {
+        try {
+            ChargeResponseDTO response = restClient.post()
+                    .uri("/api/v1/refunds")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new RefundRequestDTO(transactionId, amount))
+                    .retrieve()
+                    .body(ChargeResponseDTO.class);
+            if (response == null || !response.isApproved())
+                throw new PaymentUnavailableException("El servicio de pagos no aceptó la devolución");
+            return response.getTransactionId();
+        } catch (RestClientException e) {
             throw new PaymentUnavailableException("El servicio de pagos no está disponible en este momento");
         }
     }

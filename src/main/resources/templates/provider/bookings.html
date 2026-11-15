@@ -46,10 +46,22 @@
                     <span th:text="${booking.tourist.fullName}"></span>
                     <div class="small text-muted" th:text="${booking.tourist.email}"></div>
                 </td>
-                <td th:text="${booking.participants}"></td>
+                <td>
+                    <span class="fw-semibold" th:text="${booking.participants}"></span>
+                    <ul class="list-unstyled small text-muted mb-0" th:unless="${booking.people.isEmpty()}">
+                        <li th:each="person : ${booking.people}" class="text-nowrap"
+                            th:text="${person.fullName + ' (' + person.age + ') · ' + person.document}"></li>
+                    </ul>
+                </td>
                 <td class="small" th:text="${booking.observations ?: '-'}"></td>
                 <td class="font-monospace small" th:text="${booking.code}"></td>
-                <td><span th:replace="~{fragments/layout :: bookingStatus(${booking.status})}"></span></td>
+                <td>
+                    <span th:replace="~{fragments/layout :: bookingStatus(${booking.status})}"></span>
+                    <div class="small text-muted text-nowrap" th:if="${booking.refund}"
+                         th:text="${(booking.refund.status.name() == 'REFUNDED' ? 'Devuelto ' : 'Devolución en trámite ')
+                                    + '$ ' + #numbers.formatDecimal(booking.refund.amount, 1, 'POINT', 0, 'COMMA')
+                                    + ' (' + booking.refund.percentage + ' %)'}"></div>
+                </td>
             </tr>
             </tbody>
         </table>

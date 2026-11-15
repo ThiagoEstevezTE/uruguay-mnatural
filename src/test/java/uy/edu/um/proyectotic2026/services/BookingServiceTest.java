@@ -7,6 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 import uy.edu.um.proyectotic2026.dto.ChargeResponseDTO;
+import uy.edu.um.proyectotic2026.dto.MercadoPagoPaymentDTO;
+import uy.edu.um.proyectotic2026.dto.ParticipantDTO;
 import uy.edu.um.proyectotic2026.entities.*;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
@@ -16,9 +18,12 @@ import uy.edu.um.proyectotic2026.repository.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static uy.edu.um.proyectotic2026.services.TestPeople.people;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -51,6 +56,12 @@ class BookingServiceTest {
     @MockitoBean
     private PaymentGatewayClient paymentGateway;
 
+    @MockitoBean
+    private MercadoPagoClient mercadoPago;
+
+    @Autowired
+    private RefundService refundService;
+
     private Activity trekking;
 
     @BeforeEach
@@ -67,7 +78,7 @@ class BookingServiceTest {
 
     private Booking newBooking() throws Exception {
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
-        return bookingService.createBooking(instance.getId(), TOURIST, 2, " Soy celíaca ");
+        return bookingService.createBooking(instance.getId(), TOURIST, people(2), " Soy celíaca ");
     }
 
     // ---------- Reservar ----------
@@ -86,19 +97,77 @@ class BookingServiceTest {
     @Test
     void needsAtLeastOneParticipant() {
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
-        assertThrows(InvalidDataException.class, () -> bookingService.createBooking(instance.getId(), TOURIST, 0, null));
+        assertThrows(InvalidDataException.class, () -> bookingService.createBooking(instance.getId(), TOURIST, people(0), null));
     }
 
     @Test
-    void checksMinimumAge() {
-        touristRepo.save(Tourist.builder().email("nene@demo.uy").password("x").role(Role.TOURIST)
-                .firstName("Nene").lastName("Chico").document("60000001")
-                .birthDate(LocalDate.now().minusYears(8)).build());
+    void checksMinimumAgeOfEachPerson() {
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);   // edad minima 10
+        List<ParticipantDTO> people = people(2);
+        people.get(1).setAge(8);
 
         InvalidDataException e = assertThrows(InvalidDataException.class,
-                () -> bookingService.createBooking(instance.getId(), "nene@demo.uy", 1, null));
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people, null));
+        assertTrue(e.getMessage().contains("Persona2 tiene 8 años"));
         assertTrue(e.getMessage().contains("mayores de 10"));
+    }
+
+    @Test
+    void savesTheDataOfEachPerson() throws Exception {
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+        List<ParticipantDTO> people = List.of(
+                new ParticipantDTO(" Sofía ", "Martínez", "4.123.456-7", 34),
+                new ParticipantDTO("Tomás", "Martínez", "5.234.567-8", 11));
+
+        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, people, null);
+
+        assertEquals(2, booking.getParticipants());
+        assertEquals(2, booking.getPeople().size());
+        assertEquals("Sofía Martínez", booking.getPeople().get(0).getFullName());
+        assertEquals("4.123.456-7", booking.getPeople().get(0).getDocument());
+        assertEquals(11, booking.getPeople().get(1).getAge());
+    }
+
+    @Test
+    void everyPersonNeedsNameLastNameDocumentAndAge() {
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+        List<ParticipantDTO> people = people(2);
+        people.get(1).setDocument("  ");
+
+        InvalidDataException e = assertThrows(InvalidDataException.class,
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people, null));
+        assertTrue(e.getMessage().startsWith("Persona 2"));
+    }
+
+    @Test
+    void sameDocumentTwiceIsRejected() {
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+        List<ParticipantDTO> people = people(2);
+        people.get(0).setDocument("4.123.456-7");
+        people.get(1).setDocument("41234567");
+
+        assertThrows(InvalidDataException.class,
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people, null));
+    }
+
+    @Test
+    void invalidAgeIsRejected() {
+        ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
+        List<ParticipantDTO> people = people(1);
+        people.get(0).setAge(-1);
+
+        assertThrows(InvalidDataException.class,
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people, null));
+    }
+
+    @Test
+    void firstRowOfTheFormHasTheTouristData() throws Exception {
+        ParticipantDTO tourist = bookingService.touristAsParticipant(TOURIST);
+        Tourist saved = touristRepo.findByEmail(TOURIST).orElseThrow();
+
+        assertEquals(saved.getFirstName(), tourist.getFirstName());
+        assertEquals(saved.getDocument(), tourist.getDocument());
+        assertTrue(tourist.getAge() >= 18);
     }
 
     @Test
@@ -107,7 +176,7 @@ class BookingServiceTest {
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
 
         assertThrows(InvalidDataException.class,
-                () -> bookingService.createBooking(instance.getId(), TOURIST, 4, null));
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people(4), null));
     }
 
     @Test
@@ -115,7 +184,7 @@ class BookingServiceTest {
         trekking.setMaxParticipantsPerBooking(null);
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
 
-        assertEquals(30, bookingService.createBooking(instance.getId(), TOURIST, 30, null).getParticipants());
+        assertEquals(30, bookingService.createBooking(instance.getId(), TOURIST, people(30), null).getParticipants());
     }
 
     @Test
@@ -125,16 +194,16 @@ class BookingServiceTest {
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), null);
 
         assertThrows(InvalidDataException.class,
-                () -> bookingService.createBooking(instance.getId(), TOURIST, 2, null));
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people(2), null));
     }
 
     @Test
     void respectsCapacity() throws Exception {
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusDays(5), 3);
-        bookingService.createBooking(instance.getId(), TOURIST, 2, null);
+        bookingService.createBooking(instance.getId(), TOURIST, people(2), null);
 
         InvalidDataException e = assertThrows(InvalidDataException.class,
-                () -> bookingService.createBooking(instance.getId(), TOURIST, 2, null));
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people(2), null));
         assertEquals("Solo quedan 1 lugares para esta fecha", e.getMessage());
     }
 
@@ -142,7 +211,7 @@ class BookingServiceTest {
     void cannotBookAfterTheBookingLimit() {
         // El trekking cierra las reservas 120 minutos antes: empieza en 1 hora, ya cerro
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusHours(1), null);
-        assertThrows(InvalidDataException.class, () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null));
+        assertThrows(InvalidDataException.class, () -> bookingService.createBooking(instance.getId(), TOURIST, people(1), null));
     }
 
     @Test
@@ -151,7 +220,7 @@ class BookingServiceTest {
         instance.setStatus(InstanceStatus.CANCELLED);
 
         assertThrows(InvalidDataException.class,
-                () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null));
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people(1), null));
     }
 
     @Test
@@ -159,7 +228,7 @@ class BookingServiceTest {
         // Empieza en 2 h 30 min y cierra las reservas 2 horas antes: hay 30 minutos para pagar, no 2 horas
         ActivityInstance instance = newInstance(trekking, LocalDateTime.now().plusMinutes(150), null);
 
-        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, 1, null);
+        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, people(1), null);
 
         assertEquals(instance.getBookingDeadline(), booking.getExpiresAt());
     }
@@ -262,7 +331,7 @@ class BookingServiceTest {
         Activity rappel = activityRepo.findAll().stream()
                 .filter(a -> a.getName().startsWith("Rappel")).findFirst().orElseThrow();
         ActivityInstance instance = newInstance(rappel, LocalDateTime.now().plusDays(5), null);
-        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, 1, null);
+        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, people(1), null);
         booking.setStatus(BookingStatus.CONFIRMED);
 
         assertThrows(InvalidDataException.class, () -> bookingService.cancelByTourist(booking.getId(), TOURIST));
@@ -348,5 +417,130 @@ class BookingServiceTest {
     void checkInFromOtherProviderFails() throws Exception {
         Booking booking = newBooking();
         assertThrows(EntityNotFoundException.class, () -> bookingService.checkIn(booking.getCode(), "kayak@demo.uy"));
+    }
+
+    // ---------- Reembolsos ----------
+
+    // Reserva de 2 personas en el trekking (1200 c/u) pagada con el simulador. El trekking devuelve el 80 %.
+    private Booking paidBooking() throws Exception {
+        when(paymentGateway.charge(anyString(), any(), anyString()))
+                .thenReturn(new ChargeResponseDTO("approved", "txn_pago", "Pago aprobado"));
+        when(paymentGateway.refund(anyString(), any())).thenReturn("rfd_1");
+        Booking booking = newBooking();
+        return bookingService.payBooking(booking.getId(), TOURIST, "4242 4242 4242 4242");
+    }
+
+    @Test
+    void touristCancelRefundsThePercentageSetByTheProvider() throws Exception {
+        Booking booking = paidBooking();
+
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        Refund refund = cancelled.getRefund();
+        assertEquals(RefundStatus.REFUNDED, refund.getStatus());
+        assertEquals(80, refund.getPercentage());
+        assertEquals(0, new BigDecimal("1920.00").compareTo(refund.getAmount()));   // 80 % de 2400
+        assertEquals("rfd_1", refund.getExternalRefundId());
+        verify(paymentGateway).refund("txn_pago", new BigDecimal("1920.00"));
+    }
+
+    @Test
+    void providerCancelRefundsEverything() throws Exception {
+        Booking booking = paidBooking();
+        CancellationReason reason = reasonRepo.findByName("Mal clima").orElseThrow();
+
+        bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy", reason.getId());
+
+        Refund refund = bookingRepo.findById(booking.getId()).orElseThrow().getRefund();
+        assertEquals(100, refund.getPercentage());
+        assertEquals(0, new BigDecimal("2400.00").compareTo(refund.getAmount()));
+        assertEquals(RefundStatus.REFUNDED, refund.getStatus());
+    }
+
+    @Test
+    void unpaidBookingHasNothingToRefund() throws Exception {
+        Booking booking = newBooking();
+
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        assertNull(cancelled.getRefund());
+        verify(paymentGateway, never()).refund(anyString(), any());
+    }
+
+    @Test
+    void zeroPercentMeansNoRefund() throws Exception {
+        trekking.setRefundPercentage(0);
+        Booking booking = paidBooking();
+
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        assertEquals(BookingStatus.CANCELLED, cancelled.getStatus());
+        assertNull(cancelled.getRefund());
+        verify(paymentGateway, never()).refund(anyString(), any());
+    }
+
+    @Test
+    void cancellingTwiceDoesNotRefundTwice() throws Exception {
+        Booking booking = paidBooking();
+        bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        assertThrows(InvalidDataException.class, () -> bookingService.cancelByTourist(booking.getId(), TOURIST));
+        verify(paymentGateway, times(1)).refund(anyString(), any());
+    }
+
+    @Test
+    void refundIsRetriedWhenTheServiceDoesNotAnswer() throws Exception {
+        Booking booking = paidBooking();
+        when(paymentGateway.refund(anyString(), any()))
+                .thenThrow(new PaymentUnavailableException("El servicio de pagos no está disponible en este momento"));
+
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        // La reserva se cancela igual y la devolucion queda en tramite
+        assertEquals(BookingStatus.CANCELLED, cancelled.getStatus());
+        assertEquals(RefundStatus.PENDING, cancelled.getRefund().getStatus());
+        assertEquals(1, cancelled.getRefund().getAttempts());
+
+        // Cuando el servicio vuelve, la tarea que corre cada 5 minutos la termina
+        doReturn("rfd_2").when(paymentGateway).refund(anyString(), any());
+        refundService.retryPendingRefunds();
+
+        assertEquals(RefundStatus.REFUNDED, cancelled.getRefund().getStatus());
+        assertEquals("rfd_2", cancelled.getRefund().getExternalRefundId());
+        assertEquals(2, cancelled.getRefund().getAttempts());
+    }
+
+    @Test
+    void mercadoPagoPaymentIsRefundedInMercadoPago() throws Exception {
+        ChargeResponseDTO approved = new ChargeResponseDTO("approved", "ORD01", "Pago aprobado");
+        approved.setPaymentId("PAY01");
+        when(mercadoPago.pay(any(), any(), anyString(), anyString())).thenReturn(approved);
+        when(mercadoPago.refund(anyString(), anyString(), any(), anyBoolean())).thenReturn("REF01");
+        MercadoPagoPaymentDTO data = new MercadoPagoPaymentDTO();
+        data.setToken("tok_1");
+        Booking booking = bookingService.payBookingWithMercadoPago(newBooking().getId(), TOURIST, data);
+
+        Booking cancelled = bookingService.cancelByTourist(booking.getId(), TOURIST);
+
+        // 80 %: es una devolucion parcial, con el pago de adentro de la orden
+        verify(mercadoPago).refund("ORD01", "PAY01", new BigDecimal("1920.00"), false);
+        verify(paymentGateway, never()).refund(anyString(), any());
+        assertEquals("REF01", cancelled.getRefund().getExternalRefundId());
+    }
+
+    @Test
+    void providerCancelOfMercadoPagoPaymentIsATotalRefund() throws Exception {
+        ChargeResponseDTO approved = new ChargeResponseDTO("approved", "ORD02", "Pago aprobado");
+        approved.setPaymentId("PAY02");
+        when(mercadoPago.pay(any(), any(), anyString(), anyString())).thenReturn(approved);
+        when(mercadoPago.refund(anyString(), anyString(), any(), anyBoolean())).thenReturn("REF02");
+        MercadoPagoPaymentDTO data = new MercadoPagoPaymentDTO();
+        data.setToken("tok_1");
+        Booking booking = bookingService.payBookingWithMercadoPago(newBooking().getId(), TOURIST, data);
+        CancellationReason reason = reasonRepo.findByName("Mal clima").orElseThrow();
+
+        bookingService.cancelInstance(booking.getInstance().getId(), "sierras@demo.uy", reason.getId());
+
+        verify(mercadoPago).refund("ORD02", "PAY02", new BigDecimal("2400.00"), true);
     }
 }

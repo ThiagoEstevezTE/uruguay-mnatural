@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uy.edu.um.proyectotic2026.dto.ChargeRequestDTO;
 import uy.edu.um.proyectotic2026.dto.ChargeResponseDTO;
+import uy.edu.um.proyectotic2026.dto.RefundRequestDTO;
 
 import java.util.UUID;
 
@@ -41,5 +42,15 @@ public class FakePaymentGatewayController {
 
         String transactionId = "txn_" + UUID.randomUUID().toString().substring(0, 12);
         return ResponseEntity.ok(new ChargeResponseDTO("approved", transactionId, "Pago aprobado"));
+    }
+
+    // Devolucion de un pago aprobado (todo o una parte)
+    @PostMapping("/refunds")
+    public ResponseEntity<ChargeResponseDTO> refund(@RequestBody RefundRequestDTO request) {
+        if (request.getTransactionId() == null || request.getAmount() == null || request.getAmount().signum() <= 0)
+            return ResponseEntity.badRequest().body(new ChargeResponseDTO("rejected", null, "Devolución inválida"));
+
+        String refundId = "rfd_" + UUID.randomUUID().toString().substring(0, 12);
+        return ResponseEntity.ok(new ChargeResponseDTO("approved", refundId, "Devolución aprobada"));
     }
 }

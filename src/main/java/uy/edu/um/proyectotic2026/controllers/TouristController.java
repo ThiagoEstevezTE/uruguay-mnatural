@@ -9,15 +9,19 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uy.edu.um.proyectotic2026.entities.ActivityInstance;
+import uy.edu.um.proyectotic2026.dto.BookingFormDTO;
 import uy.edu.um.proyectotic2026.dto.MercadoPagoPaymentDTO;
 import uy.edu.um.proyectotic2026.entities.Booking;
 import uy.edu.um.proyectotic2026.entities.BookingStatus;
+import uy.edu.um.proyectotic2026.entities.Refund;
+import uy.edu.um.proyectotic2026.entities.RefundStatus;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
 import uy.edu.um.proyectotic2026.exceptions.PaymentUnavailableException;
 import uy.edu.um.proyectotic2026.services.BookingService;
 import uy.edu.um.proyectotic2026.services.QrCodeService;
 import uy.edu.um.proyectotic2026.services.RatingService;
+import uy.edu.um.proyectotic2026.services.RefundService;
 
 import java.security.Principal;
 
@@ -35,13 +39,20 @@ public class TouristController {
     @Autowired
     private QrCodeService qrCodeService;
 
+    @Autowired
+    private RefundService refundService;
+
     // ---------- Reservar ----------
 
     @GetMapping("/book/{instanceId}")
-    public String bookForm(@PathVariable("instanceId") Long instanceId, Model model, RedirectAttributes redirect)
-            throws EntityNotFoundException {
+    public String bookForm(@PathVariable("instanceId") Long instanceId, Model model, RedirectAttributes redirect,
+                           Principal principal) throws EntityNotFoundException {
         try {
             ActivityInstance instance = bookingService.getInstanceToBook(instanceId);
+            // La primera persona viene con los datos del turista; puede cambiarlos si reserva para otros
+            BookingFormDTO form = new BookingFormDTO();
+            form.getPeople().add(bookingService.touristAsParticipant(principal.getName()));
+            model.addAttribute("form", form);
             model.addAttribute("instance", instance);
             model.addAttribute("activity", instance.getActivity());
             return "tourist/book";
@@ -52,18 +63,17 @@ public class TouristController {
     }
 
     @PostMapping("/book/{instanceId}")
-    public String book(@PathVariable("instanceId") Long instanceId,
-                       @RequestParam(value = "participants", required = false) Integer participants,
-                       @RequestParam(value = "observations", required = false) String observations,
+    public String book(@PathVariable("instanceId") Long instanceId, @ModelAttribute("form") BookingFormDTO form,
                        Principal principal, Model model) throws EntityNotFoundException {
         try {
-            Booking booking = bookingService.createBooking(instanceId, principal.getName(), participants, observations);
+            Booking booking = bookingService.createBooking(instanceId, principal.getName(), form.getPeople(),
+                    form.getObservations());
             return "redirect:/tourist/bookings/" + booking.getId() + "/pay";
         } catch (InvalidDataException e) {
             // Se vuelve al formulario con el error y lo que habia escrito
             model.addAttribute("error", e.getMessage());
-            model.addAttribute("participants", participants);
-            model.addAttribute("observations", observations);
+            if (form.getPeople().isEmpty())
+                form.getPeople().add(bookingService.touristAsParticipant(principal.getName()));
             try {
                 ActivityInstance instance = bookingService.getInstanceToBook(instanceId);
                 model.addAttribute("instance", instance);
@@ -145,6 +155,7 @@ public class TouristController {
         Booking booking = bookingService.getBookingOfTourist(id, principal.getName());
         model.addAttribute("booking", booking);
         model.addAttribute("canCancel", bookingService.canTouristCancel(booking));
+        model.addAttribute("refundIfCancelled", refundService.touristRefundAmount(booking));
         model.addAttribute("canRate", ratingService.canRate(booking));
         return "tourist/booking";
     }
@@ -162,8 +173,8 @@ public class TouristController {
     @PostMapping("/bookings/{id}/cancel")
     public String cancel(@PathVariable("id") Long id, Principal principal, RedirectAttributes redirect) {
         try {
-            bookingService.cancelByTourist(id, principal.getName());
-            redirect.addFlashAttribute("message", "Cancelaste la reserva.");
+            Booking booking = bookingService.cancelByTourist(id, principal.getName());
+            redirect.addFlashAttribute("message", cancelMessage(booking));
         } catch (InvalidDataException | EntityNotFoundException e) {
             redirect.addFlashAttribute("error", e.getMessage());
         }
@@ -189,5 +200,18 @@ public class TouristController {
     public String notFound(EntityNotFoundException e, Model model) {
         model.addAttribute("error", e.getMessage());
         return "error/not-found";
+    }
+
+    private String cancelMessage(Booking booking) {
+        Refund refund = booking.getRefund();
+        if (refund == null)
+            return "Cancelaste la reserva.";
+        // Pesos sin centavos y con punto de miles, como en el resto de las pantallas ("$ 2.240")
+        String amount = "$ " + String.format(java.util.Locale.forLanguageTag("es-UY"), "%,.0f", refund.getAmount());
+        if (refund.getStatus() == RefundStatus.REFUNDED)
+            return "Cancelaste la reserva. Te devolvimos " + amount + " (" + refund.getPercentage()
+                    + " %) a la tarjeta con la que pagaste.";
+        return "Cancelaste la reserva. La devolución de " + amount + " quedó en trámite: "
+                + "el servicio de pagos no respondió y lo volvemos a intentar solo.";
     }
 }

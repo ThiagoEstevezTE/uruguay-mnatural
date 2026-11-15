@@ -112,6 +112,26 @@ class ActivityServiceTest {
     }
 
     @Test
+    void cancellationNeedsTheRefundPercentage() {
+        dto.setAllowsCancellation(true);
+        dto.setCancellationMinHours(24);
+        dto.setRefundPercentage(null);
+        assertThrows(InvalidDataException.class, () -> activityService.createActivity(dto, PROVIDER));
+
+        dto.setRefundPercentage(120);
+        assertThrows(InvalidDataException.class, () -> activityService.createActivity(dto, PROVIDER));
+    }
+
+    @Test
+    void savesTheRefundPercentage() throws Exception {
+        dto.setAllowsCancellation(true);
+        dto.setCancellationMinHours(24);
+        dto.setRefundPercentage(60);
+
+        assertEquals(60, activityService.createActivity(dto, PROVIDER).getTouristRefundPercentage());
+    }
+
+    @Test
     void updateReplacesEquipment() throws Exception {
         Activity activity = activityService.createActivity(dto, PROVIDER);
         dto.setProvidedEquipmentIds(List.of());

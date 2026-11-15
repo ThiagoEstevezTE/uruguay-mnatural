@@ -15,8 +15,10 @@ import uy.edu.um.proyectotic2026.entities.Booking;
 import uy.edu.um.proyectotic2026.entities.BookingStatus;
 import uy.edu.um.proyectotic2026.repository.ActivityRepository;
 import uy.edu.um.proyectotic2026.repository.BookingRepository;
+import uy.edu.um.proyectotic2026.repository.TouristRepository;
 import uy.edu.um.proyectotic2026.services.PaymentGatewayClient;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,6 +46,9 @@ class TouristFlowTest {
     @MockitoBean
     private PaymentGatewayClient paymentGateway;
 
+    @Autowired
+    private TouristRepository touristRepo;
+
     @Test
     void anonymousIsAskedToLogInToBook() throws Exception {
         mvc.perform(get("/tourist/book/1")).andExpect(redirectedUrl("/login"));
@@ -62,7 +67,11 @@ class TouristFlowTest {
         mvc.perform(get("/tourist/book/" + instanceId)).andExpect(status().isOk());
 
         String payUrl = mvc.perform(post("/tourist/book/" + instanceId).with(csrf())
-                        .param("participants", "2").param("observations", "Uno no sabe nadar"))
+                        .param("people[0].firstName", "Sofía").param("people[0].lastName", "Martínez")
+                        .param("people[0].document", "41234567").param("people[0].age", "34")
+                        .param("people[1].firstName", "Tomás").param("people[1].lastName", "Martínez")
+                        .param("people[1].document", "52345678").param("people[1].age", "13")
+                        .param("observations", "Uno no sabe nadar"))
                 .andExpect(status().is3xxRedirection())
                 .andReturn().getResponse().getRedirectedUrl();
 
@@ -78,6 +87,40 @@ class TouristFlowTest {
         mvc.perform(get("/tourist/bookings/" + booking.getId() + "/qr.png"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.IMAGE_PNG));
+        // Se guardaron las dos personas
+        assertEquals(2, booking.getPeople().size());
+        assertEquals("Tomás Martínez", booking.getPeople().get(1).getFullName());
+    }
+
+    @Test
+    @WithMockUser(username = "turista@demo.uy", roles = "TOURIST")
+    void bookFormComesWithTheTouristData() throws Exception {
+        Activity kayak = activityRepo.findAll().stream()
+                .filter(a -> a.getName().startsWith("Kayak")).findFirst().orElseThrow();
+        Long instanceId = kayak.getUpcomingInstances().get(1).getId();
+
+        mvc.perform(get("/tourist/book/" + instanceId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("name=\"people[0].firstName\"")))
+                .andExpect(content().string(containsString(
+                        touristRepo.findByEmail("turista@demo.uy").orElseThrow().getDocument())));
+    }
+
+    @Test
+    @WithMockUser(username = "turista@demo.uy", roles = "TOURIST")
+    void cancellingAPaidBookingRefundsAndSaysHowMuch() throws Exception {
+        when(paymentGateway.refund(anyString(), any())).thenReturn("rfd_1");
+        // UM-PROX7A: cabalgata de 3 personas (2500 c/u) pagada; la cabalgata devuelve el 50 %
+        Booking booking = bookingRepo.findByCode("UM-PROX7A").orElseThrow();
+
+        mvc.perform(get("/tourist/bookings/" + booking.getId()))
+                .andExpect(content().string(containsString("se te devuelven")));
+
+        mvc.perform(post("/tourist/bookings/" + booking.getId() + "/cancel").with(csrf()))
+                .andExpect(flash().attribute("message", containsString("Te devolvimos $ 3.750 (50 %)")));
+
+        mvc.perform(get("/tourist/bookings/" + booking.getId()))
+                .andExpect(content().string(containsString("Reembolso:")));
     }
 
     @Test

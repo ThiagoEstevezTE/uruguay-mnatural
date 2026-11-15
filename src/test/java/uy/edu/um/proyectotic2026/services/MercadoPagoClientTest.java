@@ -21,6 +21,8 @@ class MercadoPagoClientTest {
     private String receivedBody;
     private String receivedAuth;
     private String receivedKey;
+    private String receivedPath;
+    private String receivedMethod;
     private int responseStatus;
     private String responseBody;
 
@@ -31,6 +33,8 @@ class MercadoPagoClientTest {
             receivedBody = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             receivedAuth = exchange.getRequestHeaders().getFirst("Authorization");
             receivedKey = exchange.getRequestHeaders().getFirst("X-Idempotency-Key");
+            receivedPath = exchange.getRequestURI().getPath();
+            receivedMethod = exchange.getRequestMethod();
             byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
             exchange.getResponseHeaders().add("Content-Type", "application/json");
             exchange.sendResponseHeaders(responseStatus, bytes.length);
@@ -169,5 +173,54 @@ class MercadoPagoClientTest {
 
         assertThrows(PaymentUnavailableException.class,
                 () -> client().pay(data(), BigDecimal.TEN, "UM-1", "Reserva UM-1"));
+    }
+
+    @Test
+    void approvedOrderKeepsThePaymentIdForPartialRefunds() throws Exception {
+        responseStatus = 201;
+        responseBody = APPROVED;
+
+        assertEquals("PAY01", client().pay(data(), BigDecimal.TEN, "UM-1", "Reserva UM-1").getPaymentId());
+    }
+
+    // ---------- Devoluciones ----------
+
+    private static final String REFUNDED = "{\"id\":\"ORDTST01\",\"status\":\"refunded\","
+            + "\"transactions\":{\"refunds\":[{\"id\":\"REF01\",\"transaction_id\":\"PAY01\",\"amount\":\"750.00\"}]}}";
+
+    @Test
+    void partialRefundSendsThePaymentAndTheAmount() throws Exception {
+        responseStatus = 201;
+        responseBody = REFUNDED;
+
+        String refundId = client().refund("ORDTST01", "PAY01", new BigDecimal("750"), false);
+
+        assertEquals("REF01", refundId);
+        assertEquals("POST", receivedMethod);
+        assertEquals("/v1/orders/ORDTST01/refund", receivedPath);
+        assertEquals("Bearer token-de-prueba", receivedAuth);
+        assertNotNull(receivedKey);
+        assertTrue(receivedBody.contains("\"id\":\"PAY01\""));
+        assertTrue(receivedBody.contains("\"amount\":\"750.00\""));
+    }
+
+    @Test
+    void totalRefundSendsNoBody() throws Exception {
+        responseStatus = 201;
+        responseBody = REFUNDED;
+
+        client().refund("ORDTST01", "PAY01", new BigDecimal("1500"), true);
+
+        assertEquals("/v1/orders/ORDTST01/refund", receivedPath);
+        assertTrue(receivedBody.isEmpty());
+    }
+
+    @Test
+    void failedRefundIsReportedAsUnavailable() {
+        responseStatus = 400;
+        responseBody = "{\"errors\":[{\"code\":\"insufficient_balance\"}]}";
+
+        assertThrows(PaymentUnavailableException.class,
+                () -> client().refund("ORDTST01", "PAY01", BigDecimal.TEN, false));
     }
 }

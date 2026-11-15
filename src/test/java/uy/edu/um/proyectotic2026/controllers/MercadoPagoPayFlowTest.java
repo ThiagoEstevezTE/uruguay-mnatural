@@ -51,7 +51,9 @@ class MercadoPagoPayFlowTest {
         Activity kayak = activityRepo.findAll().stream()
                 .filter(a -> a.getName().startsWith("Kayak")).findFirst().orElseThrow();
         Long instanceId = kayak.getUpcomingInstances().get(1).getId();
-        return mvc.perform(post("/tourist/book/" + instanceId).with(csrf()).param("participants", "1"))
+        return mvc.perform(post("/tourist/book/" + instanceId).with(csrf())
+                        .param("people[0].firstName", "Sofía").param("people[0].lastName", "Martínez")
+                        .param("people[0].document", "41234567").param("people[0].age", "34"))
                 .andReturn().getResponse().getRedirectedUrl();
     }
 

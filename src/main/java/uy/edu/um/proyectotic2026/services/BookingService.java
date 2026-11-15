@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uy.edu.um.proyectotic2026.dto.ChargeResponseDTO;
 import uy.edu.um.proyectotic2026.dto.MercadoPagoPaymentDTO;
+import uy.edu.um.proyectotic2026.dto.ParticipantDTO;
 import uy.edu.um.proyectotic2026.entities.*;
 import uy.edu.um.proyectotic2026.exceptions.EntityNotFoundException;
 import uy.edu.um.proyectotic2026.exceptions.InvalidDataException;
@@ -21,7 +22,9 @@ import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // Reservas y pagos (Acta 1, puntos 4.4 a 4.8 y 4.10)
 @Service
@@ -57,6 +60,9 @@ public class BookingService {
     @Autowired
     private PaymentGatewayClient paymentGateway;
 
+    @Autowired
+    private RefundService refundService;
+
     // ---------- Reservar ----------
 
     public ActivityInstance getInstanceToBook(Long instanceId) throws EntityNotFoundException, InvalidDataException {
@@ -81,7 +87,7 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking createBooking(Long instanceId, String touristEmail, Integer participants, String observations)
+    public Booking createBooking(Long instanceId, String touristEmail, List<ParticipantDTO> people, String observations)
             throws EntityNotFoundException, InvalidDataException {
 
         // Se bloquea la fecha mientras se controla el cupo: dos reservas a la vez no pueden pasarse
@@ -92,8 +98,9 @@ public class BookingService {
         Tourist tourist = touristRepo.findByEmail(touristEmail)
                 .orElseThrow(() -> new EntityNotFoundException("Turista no encontrado"));
 
-        if (participants == null || participants < 1)
+        if (people == null || people.isEmpty())
             throw new InvalidDataException("La reserva tiene que ser para al menos 1 persona");
+        int participants = people.size();
         Integer maxPerBooking = activity.getMaxParticipantsPerBooking();
         if (maxPerBooking != null && participants > maxPerBooking)
             throw new InvalidDataException("Se pueden reservar hasta " + maxPerBooking + " lugares por reserva");
@@ -102,12 +109,8 @@ public class BookingService {
         if (totalAmount.compareTo(MAX_TOTAL_AMOUNT) > 0)
             throw new InvalidDataException("El total de la reserva es demasiado alto");
 
-        // Edad minima: se controla con la fecha de nacimiento del turista (Acta 1, punto 4.1)
-        if (activity.getMinimumAge() != null) {
-            int age = Period.between(tourist.getBirthDate(), instance.getStartDateTime().toLocalDate()).getYears();
-            if (age < activity.getMinimumAge())
-                throw new InvalidDataException("Esta actividad es para mayores de " + activity.getMinimumAge() + " años");
-        }
+        // Datos de cada persona que va (nombre, apellido, documento y edad) y edad minima de la actividad
+        List<BookingParticipant> checkedPeople = checkPeople(people, activity.getMinimumAge());
 
         // Cupo: solo si el prestador lo fijo para esta fecha (Acta 1, punto 4.3)
         if (instance.getMaxCapacity() != null) {
@@ -135,8 +138,61 @@ public class BookingService {
                 .createdAt(now)
                 .expiresAt(expiresAt)
                 .build();
+        checkedPeople.forEach(booking::addPerson);
 
         return bookingRepo.save(booking);
+    }
+
+    // Controla los datos de cada persona. La edad minima se controla con la edad de cada una.
+    private List<BookingParticipant> checkPeople(List<ParticipantDTO> people, Integer minimumAge)
+            throws InvalidDataException {
+        List<BookingParticipant> result = new java.util.ArrayList<>();
+        Set<String> documents = new HashSet<>();
+        int number = 0;
+        for (ParticipantDTO person : people) {
+            number++;
+            String who = "Persona " + number;
+            if (person == null || isBlank(person.getFirstName()) || isBlank(person.getLastName())
+                    || isBlank(person.getDocument()) || person.getAge() == null)
+                throw new InvalidDataException(who + ": completá nombre, apellido, documento y edad");
+
+            String firstName = person.getFirstName().trim();
+            String lastName = person.getLastName().trim();
+            String document = person.getDocument().trim();
+            if (firstName.length() > 100 || lastName.length() > 100)
+                throw new InvalidDataException(who + ": el nombre o el apellido es demasiado largo");
+            if (!document.matches("[A-Za-z0-9.\\- ]{3,20}"))
+                throw new InvalidDataException(who + ": el documento no es válido");
+            if (person.getAge() < 0 || person.getAge() > 120)
+                throw new InvalidDataException(who + ": la edad no es válida");
+            if (minimumAge != null && person.getAge() < minimumAge)
+                throw new InvalidDataException(firstName + " tiene " + person.getAge()
+                        + " años y esta actividad es para mayores de " + minimumAge + " años");
+
+            // El mismo documento dos veces en la reserva es un error de tipeo (se compara sin puntos ni guiones)
+            if (!documents.add(document.replaceAll("[.\\- ]", "").toUpperCase()))
+                throw new InvalidDataException("Hay dos personas con el mismo documento (" + document + ")");
+
+            result.add(BookingParticipant.builder()
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .document(document)
+                    .age(person.getAge())
+                    .build());
+        }
+        return result;
+    }
+
+    // Para el formulario de reserva: la primera fila viene con los datos del turista
+    public ParticipantDTO touristAsParticipant(String touristEmail) throws EntityNotFoundException {
+        Tourist tourist = touristRepo.findByEmail(touristEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Turista no encontrado"));
+        int age = Period.between(tourist.getBirthDate(), LocalDate.now()).getYears();
+        return new ParticipantDTO(tourist.getFirstName(), tourist.getLastName(), tourist.getDocument(), age);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     // Lugares ocupados: reservas confirmadas o realizadas, y pendientes que todavia no vencieron
@@ -169,6 +225,7 @@ public class BookingService {
                 .amount(booking.getTotalAmount())
                 .cardBrand(getCardBrand(card))
                 .cardLastDigits(card.substring(card.length() - 4))
+                .provider(PaymentProvider.SIMULATOR)
                 .date(LocalDateTime.now())
                 .build();
 
@@ -196,6 +253,7 @@ public class BookingService {
                 .booking(booking)
                 .amount(booking.getTotalAmount())
                 .cardBrand(data.getPaymentMethodId())
+                .provider(PaymentProvider.MERCADO_PAGO)
                 .date(LocalDateTime.now())
                 .build();
 
@@ -203,6 +261,7 @@ public class BookingService {
             ChargeResponseDTO response = mercadoPago.pay(data, booking.getTotalAmount(),
                     booking.getCode(), paymentDescription(booking));
             payment.setCardLastDigits(response.getCardLastDigits());
+            payment.setExternalPaymentId(response.getPaymentId());
             return applyPaymentResult(booking, payment, response);
         } catch (PaymentUnavailableException e) {
             savePaymentError(booking, payment, e);
@@ -286,12 +345,16 @@ public class BookingService {
 
     // ---------- Cancelar ----------
 
-    // El turista cancela solo si la actividad lo permite y con la anticipacion minima (Acta 1, punto 4.5)
+    // El turista cancela solo si la actividad lo permite y con la anticipacion minima (Acta 1, punto 4.5).
+    // Si ya habia pagado, se le devuelve el porcentaje que fijo el prestador.
+    // Se bloquea la reserva: un doble clic en "Cancelar" no puede devolver dos veces.
     @Transactional
     public Booking cancelByTourist(Long bookingId, String touristEmail)
             throws EntityNotFoundException, InvalidDataException {
 
-        Booking booking = getBookingOfTourist(bookingId, touristEmail);
+        Booking booking = bookingRepo.findLockedById(bookingId)
+                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+        checkOwner(booking, touristEmail);
 
         if (booking.getStatus() != BookingStatus.PENDING && booking.getStatus() != BookingStatus.CONFIRMED)
             throw new InvalidDataException("Esta reserva no se puede cancelar");
@@ -313,12 +376,13 @@ public class BookingService {
         return LocalDateTime.now().isBefore(limit);
     }
 
-    // El prestador cancela una fecha: se cancelan todas sus reservas activas (Acta 1, punto 4.6).
+    // El prestador cancela una fecha: se cancelan todas sus reservas activas (Acta 1, punto 4.6)
+    // y a las que estaban pagadas se les devuelve el 100 %.
     @Transactional
     public int cancelInstance(Long instanceId, String providerEmail, Long reasonId)
             throws EntityNotFoundException, InvalidDataException {
 
-        ActivityInstance instance = instanceRepo.findById(instanceId)
+        ActivityInstance instance = instanceRepo.findLockedById(instanceId)
                 .orElseThrow(() -> new EntityNotFoundException("Fecha no encontrada"));
         if (!instance.getActivity().getBusiness().getProvider().getEmail().equals(providerEmail))
             throw new EntityNotFoundException("Fecha no encontrada");
@@ -338,7 +402,9 @@ public class BookingService {
         instanceRepo.save(instance);
 
         int cancelled = 0;
-        for (Booking booking : bookingRepo.findByInstanceId(instanceId)) {
+        for (Booking found : bookingRepo.findByInstanceId(instanceId)) {
+            // Se bloquea cada reserva: si el turista la cancela justo a la vez, no se devuelve dos veces
+            Booking booking = bookingRepo.findLockedById(found.getId()).orElseThrow();
             if (booking.getStatus() == BookingStatus.PENDING || booking.getStatus() == BookingStatus.CONFIRMED) {
                 cancel(booking, CancelledBy.PROVIDER);
                 cancelled++;
@@ -384,11 +450,15 @@ public class BookingService {
 
     // ---------- Metodos de ayuda ----------
 
+    // Si la reserva estaba pagada, se devuelve la plata (las que vencen sin pagar no tienen nada que devolver)
     private Booking cancel(Booking booking, CancelledBy who) {
         booking.setStatus(BookingStatus.CANCELLED);
         booking.setCancelledBy(who);
         booking.setCancellationDate(LocalDateTime.now());
-        return bookingRepo.save(booking);
+        Booking saved = bookingRepo.save(booking);
+        if (who != CancelledBy.SYSTEM)
+            refundService.refundCancelledBooking(saved, who);
+        return saved;
     }
 
     // Numero de reserva tipo "UM-7K3F9Q" (sin letras que se confunden, como O y 0)

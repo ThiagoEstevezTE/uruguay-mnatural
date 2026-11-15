@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static uy.edu.um.proyectotic2026.services.TestPeople.people;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -93,7 +94,7 @@ class BookingConcurrencyTest {
             Thread.sleep(300);
             return new ChargeResponseDTO("approved", "txn_1", "Pago aprobado");
         });
-        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, 1, null);
+        Booking booking = bookingService.createBooking(instance.getId(), TOURIST, people(1), null);
 
         List<Object> results = runTogether(
                 () -> bookingService.payBooking(booking.getId(), TOURIST, "4242424242424242"),
@@ -117,8 +118,8 @@ class BookingConcurrencyTest {
         }).when(bookingRepo).existsByCode(anyString());
 
         List<Object> results = runTogether(
-                () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null),
-                () -> bookingService.createBooking(instance.getId(), TOURIST, 1, null));
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people(1), null),
+                () -> bookingService.createBooking(instance.getId(), TOURIST, people(1), null));
 
         assertEquals(1, results.stream().filter(r -> r instanceof Booking).count());
         assertEquals(1, results.stream().filter(r -> r instanceof InvalidDataException).count());
