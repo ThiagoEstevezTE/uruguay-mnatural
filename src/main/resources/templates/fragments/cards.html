@@ -2,31 +2,56 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- Portada: foto del lugar si la tenemos (img/lugares, fotos libres de Wikimedia, ver /credits).
-     Si el lugar no tiene foto, un color con un icono segun el tipo principal de la actividad. -->
+<!-- Portada: la primera foto que subio el prestador. Si no subio ninguna, foto del lugar si la tenemos
+     (img/lugares, fotos libres de Wikimedia, ver /credits). Si tampoco, un color con un icono segun el tipo principal. -->
 <div th:fragment="cover(activity, height)" class="activity-cover"
      th:with="mainType=${activity.typeNames.isEmpty() ? '' : activity.typeNames[0]}"
      th:attr="data-type=${mainType}"
      th:style="${height} ? ${'height:' + height}">
-    <th:block th:switch="${activity.locality.name}">
-        <img th:case="'Cabo Polonio'" th:src="@{/img/lugares/cabo-polonio.jpg}" alt="Playa y dunas de Cabo Polonio">
-        <img th:case="'Villa Serrana'" th:src="@{/img/lugares/villa-serrana.jpg}" alt="Sierras y monte de Villa Serrana vistos desde arriba">
-        <img th:case="'Colonia del Sacramento'" th:src="@{/img/lugares/colonia-del-sacramento.jpg}" alt="Calle de los Suspiros, en el Barrio Histórico de Colonia">
-        <img th:case="'Punta del Este'" th:src="@{/img/lugares/punta-del-este.jpg}" alt="Isla Gorriti al atardecer, vista desde Punta del Este">
-        <th:block th:case="*">
-            <th:block th:switch="${mainType}">
-                <i th:case="'Actividad acuática'" class="bi bi-water"></i>
-                <i th:case="'Aventura'" class="bi bi-lightning-charge"></i>
-                <i th:case="'Cabalgata'" class="bi bi-sunset"></i>
-                <i th:case="'Enoturismo'" class="bi bi-cup-straw"></i>
-                <i th:case="'Gastronomía'" class="bi bi-cup-hot"></i>
-                <i th:case="'Recorrido histórico'" class="bi bi-bank"></i>
-                <i th:case="'Senderismo'" class="bi bi-signpost-2"></i>
-                <i th:case="'Trekking'" class="bi bi-signpost-split"></i>
-                <i th:case="'Turismo de naturaleza'" class="bi bi-tree"></i>
-                <i th:case="*" class="bi bi-compass"></i>
+    <img th:if="${activity.photoCount > 0}" th:src="@{/activities/{id}/photos/0(id=${activity.id})}" th:alt="${activity.name}">
+    <th:block th:unless="${activity.photoCount > 0}">
+        <th:block th:switch="${activity.locality.name}">
+            <img th:case="'Cabo Polonio'" th:src="@{/img/lugares/cabo-polonio.jpg}" alt="Playa y dunas de Cabo Polonio">
+            <img th:case="'Villa Serrana'" th:src="@{/img/lugares/villa-serrana.jpg}" alt="Sierras y monte de Villa Serrana vistos desde arriba">
+            <img th:case="'Colonia del Sacramento'" th:src="@{/img/lugares/colonia-del-sacramento.jpg}" alt="Calle de los Suspiros, en el Barrio Histórico de Colonia">
+            <img th:case="'Punta del Este'" th:src="@{/img/lugares/punta-del-este.jpg}" alt="Isla Gorriti al atardecer, vista desde Punta del Este">
+            <th:block th:case="*">
+                <th:block th:switch="${mainType}">
+                    <i th:case="'Actividad acuática'" class="bi bi-water"></i>
+                    <i th:case="'Aventura'" class="bi bi-lightning-charge"></i>
+                    <i th:case="'Cabalgata'" class="bi bi-sunset"></i>
+                    <i th:case="'Enoturismo'" class="bi bi-cup-straw"></i>
+                    <i th:case="'Gastronomía'" class="bi bi-cup-hot"></i>
+                    <i th:case="'Recorrido histórico'" class="bi bi-bank"></i>
+                    <i th:case="'Senderismo'" class="bi bi-signpost-2"></i>
+                    <i th:case="'Trekking'" class="bi bi-signpost-split"></i>
+                    <i th:case="'Turismo de naturaleza'" class="bi bi-tree"></i>
+                    <i th:case="*" class="bi bi-compass"></i>
+                </th:block>
             </th:block>
         </th:block>
+    </th:block>
+</div>
+
+<!-- Detalle de la actividad: con 2 o 3 fotos se pasan con flechas (carrusel de Bootstrap); si no, la portada -->
+<div th:fragment="gallery(activity, height)">
+    <div th:if="${activity.photoCount > 1}" id="activityPhotos" class="carousel slide activity-cover" th:style="${'height:' + height}">
+        <div class="carousel-inner h-100">
+            <div th:each="i : ${#numbers.sequence(0, activity.photoCount - 1)}" class="carousel-item h-100" th:classappend="${i == 0} ? 'active'">
+                <img th:src="@{/activities/{id}/photos/{n}(id=${activity.id}, n=${i})}" th:alt="${activity.name + ' (foto ' + (i + 1) + ')'}">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#activityPhotos" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Foto anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#activityPhotos" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Foto siguiente</span>
+        </button>
+    </div>
+    <th:block th:unless="${activity.photoCount > 1}">
+        <div th:replace="~{fragments/cards :: cover(${activity}, ${height})}"></div>
     </th:block>
 </div>
 

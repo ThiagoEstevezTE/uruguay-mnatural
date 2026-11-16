@@ -12,7 +12,7 @@
 
     <!-- El mismo formulario sirve para crear y para editar: cambia a donde se manda -->
     <form th:action="${activityId} ? @{/provider/activities/{id}/edit(id=${activityId})} : @{/provider/activities/new}"
-          th:object="${form}" method="post">
+          th:object="${form}" method="post" enctype="multipart/form-data">
 
         <div class="card card-um p-4 mb-3">
             <h2 class="h5 mb-3">Información general</h2>
@@ -48,6 +48,15 @@
                     <input type="number" th:field="*{price}" class="form-control" min="0" step="1" required>
                 </div>
             </div>
+        </div>
+
+        <div class="card card-um p-4 mb-3">
+            <h2 class="h5 mb-3">Fotos</h2>
+            <label for="photos" class="form-label">Hasta 3 fotos de la actividad (JPG, PNG o WebP, de hasta 5 MB cada una)</label>
+            <input type="file" id="photos" name="photos" class="form-control" accept="image/jpeg,image/png,image/webp" multiple>
+            <div class="form-text" th:text="${activityId}
+                    ? 'Si elegís fotos nuevas, reemplazan a las que tiene. Si no elegís ninguna, quedan las de ahora.'
+                    : 'La primera es la portada. Si no subís ninguna, se muestra una foto del lugar.'"></div>
         </div>
 
         <div class="card card-um p-4 mb-3">
@@ -135,6 +144,19 @@
         </button>
     </form>
 </main>
+
+<script>
+    // Avisa antes de mandar si hay más de 3 fotos o alguna pesa más de 5 MB (el servidor lo controla igual)
+    const photosInput = document.getElementById('photos');
+    photosInput.addEventListener('change', () => {
+        const files = Array.from(photosInput.files);
+        let message = '';
+        if (files.length > 3) message = 'Podés subir hasta 3 fotos';
+        else if (files.some(f => f.size > 5 * 1024 * 1024)) message = 'Cada foto puede pesar hasta 5 MB';
+        photosInput.setCustomValidity(message);
+        photosInput.reportValidity();
+    });
+</script>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 </body>

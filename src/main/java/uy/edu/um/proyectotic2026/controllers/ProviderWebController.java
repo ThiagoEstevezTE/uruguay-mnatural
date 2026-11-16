@@ -6,10 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uy.edu.um.proyectotic2026.dto.ActivityDTO;
 import uy.edu.um.proyectotic2026.dto.BusinessDTO;
 import uy.edu.um.proyectotic2026.entities.Activity;
+import uy.edu.um.proyectotic2026.entities.ActivityPhoto;
 import uy.edu.um.proyectotic2026.entities.Booking;
 import uy.edu.um.proyectotic2026.entities.Business;
 import uy.edu.um.proyectotic2026.entities.BusinessStatus;
@@ -32,6 +34,9 @@ public class ProviderWebController {
 
     @Autowired
     private ActivityService activityService;
+
+    @Autowired
+    private ActivityPhotoService photoService;
 
     @Autowired
     private LocationService locationService;
@@ -113,9 +118,13 @@ public class ProviderWebController {
 
     @PostMapping("/activities/new")
     public String createActivity(@ModelAttribute("form") ActivityDTO form, Model model, Principal principal,
+                                 @RequestParam(value = "photos", required = false) List<MultipartFile> files,
                                  RedirectAttributes redirect) throws EntityNotFoundException {
         try {
+            // Las fotos se controlan antes de crear la actividad: si alguna esta mal, no se crea nada
+            List<ActivityPhoto> photos = photoService.check(files);
             Activity activity = activityService.createActivity(form, principal.getName());
+            photoService.replacePhotos(activity, photos);
             redirect.addFlashAttribute("message", "Actividad creada. Ahora agregale fechas y horarios.");
             return "redirect:/provider/activities/" + activity.getId();
         } catch (InvalidDataException | EntityNotFoundException e) {
@@ -147,10 +156,13 @@ public class ProviderWebController {
 
     @PostMapping("/activities/{id}/edit")
     public String updateActivity(@PathVariable("id") Long id, @ModelAttribute("form") ActivityDTO form,
+                                 @RequestParam(value = "photos", required = false) List<MultipartFile> files,
                                  Model model, Principal principal, RedirectAttributes redirect)
             throws EntityNotFoundException {
         try {
-            activityService.updateActivity(id, form, principal.getName());
+            List<ActivityPhoto> photos = photoService.check(files);
+            Activity activity = activityService.updateActivity(id, form, principal.getName());
+            photoService.replacePhotos(activity, photos);
             redirect.addFlashAttribute("message", "Cambios guardados.");
             return "redirect:/provider/activities/" + id;
         } catch (InvalidDataException | EntityNotFoundException e) {

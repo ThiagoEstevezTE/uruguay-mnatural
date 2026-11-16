@@ -2,6 +2,7 @@ package uy.edu.um.proyectotic2026.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -70,6 +71,10 @@ public class Activity {
     @Builder.Default
     @Column(nullable = false)
     private boolean published = true;
+
+    // Cuantas fotos subio el prestador (0 = se muestra la foto del lugar). Se cuenta en la misma consulta.
+    @Formula("(select count(*) from activity_photos p where p.activity_id = id)")
+    private int photoCount;
 
     // Tabla intermedia ACTIVIDAD_TIPO del MER
     @ManyToMany

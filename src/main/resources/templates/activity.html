@@ -9,7 +9,7 @@
 
     <div class="row g-4 mt-1">
         <div class="col-lg-8">
-            <div th:replace="~{fragments/cards :: cover(${activity}, '380px')}"></div>
+            <div th:replace="~{fragments/cards :: gallery(${activity}, '380px')}"></div>
 
             <h1 class="h2 section-title mt-3 mb-2" th:text="${activity.name}"></h1>
             <p class="mb-1" th:if="${average}">

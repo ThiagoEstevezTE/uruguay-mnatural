@@ -327,3 +327,17 @@ main {
 .crumbs .bi-house-door-fill { font-size: 1.05rem; }
 .crumbs .bi-chevron-right { font-size: .7rem; opacity: .6; }
 .crumbs span { color: var(--um-text); }
+
+/* Flechas del carrusel de fotos: un circulo oscuro para que se vean sobre fotos claras */
+#activityPhotos .carousel-control-prev,
+#activityPhotos .carousel-control-next {
+    opacity: .9;
+}
+#activityPhotos .carousel-control-prev-icon,
+#activityPhotos .carousel-control-next-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: rgba(0, 0, 0, .45);
+    background-size: 55%;
+    border-radius: 50%;
+}
