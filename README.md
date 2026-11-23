@@ -114,7 +114,5 @@ Los tests usan H2 en memoria, así que no necesitan Postgres.
 - [`docs/GUION_DEMO.md`](docs/GUION_DEMO.md): el recorrido de la presentación y cómo prepararla.
 - `docs/manuales/`: manuales de usuario para turistas, prestadores y administradores.
 - `docs/GUIA_DEL_CODIGO.md`: cómo está hecho el código, parte por parte, y los conceptos clave.
-- `docs/HISTORIAL.md`: decisiones tomadas y equivalencia entre el MER y el código.
-- `docs/PLAN.md`: plan original del registro de prestadores.
-- `docs/requerimientos/`: letra del proyecto y actas con el cliente.
+- `docs/requerimientos/`: letra del proyecto, actas con el cliente y el documento de requerimientos y casos de uso.
 - `docs/diagramas/`: MER y modelo relacional.

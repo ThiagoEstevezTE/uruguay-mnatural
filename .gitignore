@@ -35,6 +35,5 @@ build/
 ### Datos de conexion locales ###
 .env
 
-### Claude Code local ###
-.claude/
+### Archivos locales ###
 .env.local

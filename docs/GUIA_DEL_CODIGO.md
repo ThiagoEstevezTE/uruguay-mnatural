@@ -213,7 +213,7 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
 
 **Archivo:** `controllers/ProviderRestController`.
 
-- Es el código que había quedado diseñado en `docs/PLAN.md`, paso 6.
+- Fue el primer endpoint REST del proyecto: el registro de prestadores.
 - `POST /api/v1/provider/register` recibe un JSON con los datos del prestador y de su emprendimiento:
   - devuelve **201** si se creó;
   - **400** si los datos están mal o repetidos;
