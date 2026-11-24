@@ -347,7 +347,7 @@ Thymeleaf completa el HTML con los datos que el controller pone en el `Model`:
   - la tarjeta de actividad se escribe una vez y se usa en la portada y en el buscador;
   - la portada de cada actividad muestra la foto de su lugar (`static/img/lugares`) con un `th:switch` sobre el nombre de la localidad. Si el lugar no tiene foto, queda la portada de color según su tipo, con el atributo `data-type` que lee el CSS;
   - las fotos son de Wikimedia Commons con licencia libre (CC BY-SA): se pueden usar nombrando al autor y la licencia, y eso está en `/credits` (`credits.html`, con un link en el pie). Muestran el lugar, no al prestador ni su actividad;
-  - **Si preguntan por qué no es un campo de la base:** las fotos de cada actividad son IMAGEN_ACTIVIDAD del MER y todavía no están (ver 3.4). Mientras tanto, la foto del lugar es fija y no cambia la base.
+  - **Fotos del prestador:** si el prestador subió fotos de su actividad (IMAGEN_ACTIVIDAD del MER, clase `ActivityPhoto`, tabla `activity_photos`), la tarjeta muestra esas en lugar de la del lugar. Se guardan en la base (`ActivityPhotoService`) y se sirven en `/activities/{id}/photos/{n}`.
 
 **Filtro por localidad.** `ActivitySearchDTO.localityId` se aplica en el mismo stream que los otros filtros. Un script chico en `activities.html` deja en el desplegable solo las localidades del departamento elegido. `LocationService.getLocalitiesByDepartment` las trae en una sola consulta (`join fetch`), para no hacer una por departamento.
 
@@ -499,7 +499,8 @@ src/main/java/uy/edu/um/proyectotic2026/
 ├── config/        SecurityConfig (permisos y login) · DataLoader (datos de ejemplo)
 ├── entities/      Las tablas del MER: User, Tourist, Provider, Administrator, Business,
 │                  Department, Locality, Activity, ActivityInstance, ActivityType,
-│                  Equipment, ActivityEquipment, Booking, Payment, Rating + los enums de estados
+│                  Equipment, ActivityEquipment, ActivityPhoto, Booking, BookingParticipant,
+│                  Payment, Refund, Rating, CancellationReason + los enums de estados
 ├── repository/    Un JpaRepository por entidad
 ├── services/      Las reglas del negocio (una clase por tema)
 ├── controllers/   Web (@Controller) y API (@RestController)
@@ -557,8 +558,6 @@ src/main/resources/
 
 | Tema | Estado |
 |---|---|
-| **Reembolsos** (REEMBOLSO del MER) | Los motivos ya están. La devolución de la plata es lo próximo: 100 % si cancela el prestador y lo que él defina si cancela el turista. |
-| **Guardar el medio de pago del turista** (MEDIO_PAGO) | Está acordado en el acta (4.1), pero no es necesario para reservar. Es la próxima mejora. |
-| **Imágenes de las actividades** (IMAGEN_ACTIVIDAD) | Por ahora cada actividad muestra una foto de su lugar (fija, de Wikimedia Commons) o, si el lugar no tiene, una portada de color según su tipo. Falta que el prestador pueda subir las fotos de su actividad. |
+| **Guardar el medio de pago del turista** | Está en el acta (4.1), pero no es necesario para reservar: la tarjeta la maneja Mercado Pago y la plataforma no la guarda. Por eso no está en el MER. Es una mejora a futuro. |
 | **Mail de confirmación** | Se muestra en pantalla. Mandarlo de verdad necesita un servidor de correo (por ejemplo `spring-boot-starter-mail`). |
 | **Escanear el QR con la cámara** | El QR se genera. El prestador escribe el código; leerlo con la cámara del celular sería una mejora. |
